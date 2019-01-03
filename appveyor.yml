@@ -1,4 +1,4 @@
-﻿# template from https://dotnetcore.gaprogman.com/2017/06/08/continuous-integration-and-appveyor/
+# template from https://dotnetcore.gaprogman.com/2017/06/08/continuous-integration-and-appveyor/
 version: '1.0.{build}'
 image: Visual Studio 2017
 branches:
@@ -12,11 +12,13 @@ install:
 before_build:
   # Display .NET Core version
   - cmd: dotnet --version
+  - cmd: dir
+  - cmd: ls
   # Display minimal restore text
-  - cmd: dotnet restore ./PathOfSupporting.csproj --verbosity m
+  - cmd: dotnet restore PathOfSupporting.csproj --verbosity m
 build_script:
   # output will be in ./src/bin/debug/netcoreapp1.1/publish
-  - cmd: dotnet publish ./PathOfSupporting.csproj
+  - cmd: dotnet publish PathOfSupporting.csproj
 on_finish :
   # any cleanup in here
 #Here we’re telling AppVeyor’s git client to only clone the current branch and no history. We don’t need any of the history to build the application, so this will speed up the clone slightly. This, in turn, will make the whole build time faster.^
