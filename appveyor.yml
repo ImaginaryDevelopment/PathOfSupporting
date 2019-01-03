@@ -13,7 +13,7 @@ before_build:
   # Display .NET Core version
   - cmd: dotnet --version
   - cmd: ls
-  - cmd: dir PoS
+#  - cmd: dir PoS
   # Display minimal restore text
   #C:\projects\PathOfSupporting\PoS\PathOfSupporting.fsproj
   - cmd: dotnet restore ./PoS/PathOfSupporting.fsproj --verbosity m
@@ -26,7 +26,9 @@ on_finish :
 clone_depth: 1
 #deploy: off
 after_build:
+  - cmd: ls
   - cmd: nuget pack ./PoS/.nuspec
+  - cmd: ls
 deploy:
   provider: NuGet
   server:                  # remove to push to NuGet.org
