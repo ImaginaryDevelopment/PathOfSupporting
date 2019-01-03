@@ -37,8 +37,8 @@ module Gems =
         |> Result.map (Seq.tryFind(isGemNameEqual skillName))
         |> Result.bind (function | None -> Result.ErrMsg <| sprintf "Gem %s not found" skillName | Some g -> Result.Ok g)
 
-    let getGemReqLevels folderPath jsonFilename skillNames =
-        match getSkillGems folderPath with
+    let getGemReqLevels sgjp skillNames =
+        match getSkillGems sgjp with
         | Error msg -> Error msg
         | Ok gems ->
             skillNames

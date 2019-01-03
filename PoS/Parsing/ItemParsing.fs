@@ -28,7 +28,7 @@ module Resistances =
                 match t with
                 | Elemental _ -> elTotal + x
                 | _ -> elTotal
-            ) 0
+        ) 0
 
     let foldTotal items =
         let x =
