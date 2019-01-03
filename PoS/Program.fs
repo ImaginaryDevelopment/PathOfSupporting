@@ -1,7 +1,11 @@
-﻿open PathOfSupporting.Internal.BReusable.StringPatterns
+﻿#if !EXE
+module PathOfSupporting.Program
+#endif
+open PathOfSupporting.Internal.BReusable.StringPatterns
 open System
-
+#if EXE
 [<EntryPoint>]
+#endif
 let main argv =
     printfn "%A" argv
     match List.ofArray argv with
@@ -11,7 +15,3 @@ let main argv =
         Console.ReadLine() |> ignore
     | _ -> Console.Error.WriteLine "Unknown command"
     0
-
-
-
-
