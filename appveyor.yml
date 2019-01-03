@@ -27,7 +27,7 @@ clone_depth: 1
 #deploy: off
 after_build:
   - cmd: ls
-  - cmd: rmdir /S /Q PoS/obj
+  - cmd: rmdir /S /Q PoS\obj
   - cmd: nuget pack ./PoS/PathOfSupporting.nuspec
   - cmd: dir
 artifacts:
