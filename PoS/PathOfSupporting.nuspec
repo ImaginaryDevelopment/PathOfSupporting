@@ -5,7 +5,7 @@
         <id>PathOfSupporting</id>
 
         <!-- The package version number that is used when resolving dependencies -->
-        <version>0.0.1-beta2</version>
+        <version>0.0.1-beta3</version>
 
         <!-- Authors contain text that appears directly on the gallery -->
         <authors>Brandon D'Imperio</authors>
@@ -17,7 +17,7 @@
         <owners>MaslowB, Brandon D'Imperio</owners>
         
          <!-- Project URL provides a link for the gallery -->
-        <projectUrl>http://github.com/contoso/UsefulStuff</projectUrl>
+        <projectUrl>https://github.com/ImaginaryDevelopment/PathOfSupporting</projectUrl>
 
          <!-- License information is displayed on the gallery -->
         <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
