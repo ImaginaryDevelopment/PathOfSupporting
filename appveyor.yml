@@ -28,7 +28,7 @@ clone_depth: 1
 after_build:
   - cmd: ls
   - cmd: nuget pack ./PoS/.nuspec
-  - cmd: ls
+  - cmd: dir
 deploy:
   provider: NuGet
   server:                  # remove to push to NuGet.org

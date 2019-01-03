@@ -8,11 +8,11 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <OutputPath>bin\lib\</OutputPath>
+    <OutputPath>lib\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include=".nuspec" />
+    <None Include="PathOfSupporting.nuspec" />
     <Compile Include="BReusable.fs" />
     <Compile Include="Helpers.fs" />
     <Compile Include="Schema.fs" />
