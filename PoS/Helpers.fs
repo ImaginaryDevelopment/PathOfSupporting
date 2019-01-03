@@ -1,7 +1,22 @@
-﻿module PathOfSupporting.Internal.Helpers
+﻿module PathOfSupporting.Internal.Helpers // purpose things that likely would be good in BReusable, but aren't in the canonical file - https://github.com/ImaginaryDevelopment/FsInteractive/blob/master/BReusable.fs
 open System
 open System.Collections.Generic
 open System.Linq
+
+// type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
+///string * exn option
+type PoSError = string * exn option
+// type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
+/// Result<'t,PoSError>
+type PoSResult<'t> = Result<'t,PoSError>
+
+let errMsg msg :PoSResult<'t> = Result.Error(msg,None)
+let errMsgEx msg ex :PoSResult<'t> = Result.Error(msg,Some ex)
+// could name the extensions Error (but then... what is that helping?
+type Result<'t,'tErr> with
+    static member ErrMsg msg = errMsg msg
+    static member Ex msg ex = errMsgEx msg ex
+
 
 module Reflection =
     open BReusable
@@ -12,7 +27,6 @@ module Reflection =
         function
         | UnsafeNull -> None
         | x ->
-            printf "Checking a value for unionized labor"
             let t = x.GetType()
             try
                 let uInfo,fv = FSharpValue.GetUnionFields(x,t)
@@ -98,36 +112,40 @@ module Async =
         }
 
 
+(*
+    // the below code works, but was specific to discord, not needed here
 
-//// http://www.fssnip.net/hv/title/Extending-async-with-await-on-tasks
-//type Microsoft.FSharp.Control.AsyncBuilder with
-//    member x.Bind(t:System.Threading.Tasks.Task<'t>, f:'t -> Async<'r>) : Async<'r> =
-//        x.Bind(Async.AwaitTask t,f)
-//    member x.Bind(t:System.Threading.Tasks.Task, f:unit -> Async<unit>) : Async<unit> =
-//        x.Bind(Async.AwaitTask t,f)
+    // http://www.fssnip.net/hv/title/Extending-async-with-await-on-tasks
+    type Microsoft.FSharp.Control.AsyncBuilder with
+        member x.Bind(t:System.Threading.Tasks.Task<'t>, f:'t -> Async<'r>) : Async<'r> =
+            x.Bind(Async.AwaitTask t,f)
+        member x.Bind(t:System.Threading.Tasks.Task, f:unit -> Async<unit>) : Async<unit> =
+            x.Bind(Async.AwaitTask t,f)
 
-//    // based on https://github.com/RogueException/Discord.Net/blob/ff0fea98a65d907fbce07856f1a9ef4aebb9108b/src/Discord.Net.Core/Extensions/AsyncEnumerableExtensions.cs
-//    member x.Bind(e:IAsyncEnumerable<IEnumerable<'t>>,f) =
-//        let t = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ToArray()
-//        x.Bind(t,f)
-//    member x.Bind(e:IAsyncEnumerable<IReadOnlyCollection<'t>>,f) =
-//        let t = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ToArray()
-//        x.Bind(t,f)
+        // based on https://github.com/RogueException/Discord.Net/blob/ff0fea98a65d907fbce07856f1a9ef4aebb9108b/src/Discord.Net.Core/Extensions/AsyncEnumerableExtensions.cs
+        member x.Bind(e:IAsyncEnumerable<IEnumerable<'t>>,f) =
+            let t = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ToArray()
+            x.Bind(t,f)
+        member x.Bind(e:IAsyncEnumerable<IReadOnlyCollection<'t>>,f) =
+            let t = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ToArray()
+            x.Bind(t,f)
 
-//    //member __.For(e:IAsyncEnumerable<IEnumerable<'t>>,f) = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ForEachAsync(Action<_>(f))
-//    member __.For(e:IAsyncEnumerable<IReadOnlyCollection<'t>>,f) = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ForEach(Action<_>(f))
+        //member __.For(e:IAsyncEnumerable<IEnumerable<'t>>,f) = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ForEachAsync(Action<_>(f))
+        member __.For(e:IAsyncEnumerable<IReadOnlyCollection<'t>>,f) = e.SelectMany(fun y -> y.ToAsyncEnumerable()).ForEach(Action<_>(f))
 
+*)
 
 module SuperSerial =
     open Newtonsoft.Json
     let inline serialize (x:_) = JsonConvert.SerializeObject(value=x)
-    let inline deserialize<'t> x :'t option = 
+    let inline deserialize<'t> x :PoSResult<'t> =
         try
             JsonConvert.DeserializeObject<'t>(x)
-            |> Some
+            |> Result.Ok
         with ex ->
-            System.Diagnostics.Trace.WriteLine(sprintf "Error deserialization failed:%s" ex.Message)
-            None
+            let msg =sprintf "Error deserialization failed:%s" ex.Message
+            System.Diagnostics.Trace.WriteLine msg
+            Result.Ex msg ex
     let  inline serializeXmlNodePretty (x:System.Xml.XmlNode) = JsonConvert.SerializeXmlNode(x, Formatting.Indented)
 
 
@@ -142,8 +160,8 @@ module Storage =
     let private getKeyValue key =
         let keyPath = getKeyPath key
         if Directory.Exists folderPath && File.Exists keyPath then
-            File.ReadAllText keyPath |> deserialize 
-        else None
+            File.ReadAllText keyPath |> deserialize
+        else Result.ErrMsg <| sprintf "Path not found %s" keyPath
     let private setKeyValue key value =
         if not <| Directory.Exists folderPath then
             Directory.CreateDirectory folderPath |> ignore
@@ -156,14 +174,14 @@ module Storage =
             File.WriteAllText(keyPath,serialize value)
 
     // allows simple creation of mated pairs of 't option with get,set
-    let createGetSet<'t> key:(unit -> 't option)* ('t option -> unit)=
+    let createGetSet<'t> key:(unit -> PoSResult<'t>)* ('t option -> unit)=
         let getter () =
             match getKeyValue key with
-            | None ->
-                printfn "I couldn't find my save file at %s" <| getKeyPath key
-                None
-            | Some x ->
-                Some x
+            | Error e ->
+                eprintfn "I couldn't find my save file at %s" <| getKeyPath key
+                Error e
+            | Ok x ->
+                Ok x
         let setter vOpt = setKeyValue key vOpt
         getter, setter
 
@@ -216,7 +234,6 @@ module StringPatterns =
             let token = x.Groups.[1].Value
             let i = x.Index+x.Length
             let rem = if txt.Length > i then txt.[i..] else String.Empty
-            printfn "We have a match! remainder is '%s'" rem
             Some(token,rem)
         | _ -> None
 

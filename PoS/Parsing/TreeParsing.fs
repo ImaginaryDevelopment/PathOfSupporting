@@ -15,25 +15,32 @@ type NodeType =
     |JewelSocket
 module Gems =
 
+    // make methods less stringly typed
+    type SkillGemJsonPath = {ResourceDirectory:string; Filename:string option}
     type Gem = {SkillId:string; Name:string; Level:int; Quality:int;Enabled:bool}
     let isGemNameEqual skillName (x:Gem) = String.equalsI x.Name skillName || String.equalsI (sprintf "%s support" skillName) x.Name
-    let getSkillGems folderPath =
-        let path = IO.Path.Combine(folderPath,"Gems3.5.json")
+    let getSkillGems {ResourceDirectory=folderPath;Filename=jsonFilename} =
+        let jsonFilename = defaultArg jsonFilename "Gems3.5.json"
+        let path = IO.Path.Combine(folderPath,jsonFilename)
         if IO.File.Exists path then
             path
             |> IO.File.ReadAllText
             |> SuperSerial.deserialize<Gem list>
         else
-            eprintfn "Could not find gems file at %s" path
-            None
-    let getSkillGem folderPath skillName =
-        getSkillGems folderPath
-        |> Option.bind(Seq.tryFind(isGemNameEqual skillName))
+            let msg = sprintf "Could not find gems file at %s" path
+            eprintfn "%s" msg
+            Result.ErrMsg msg
 
-    let getGemReqLevels folderPath skillNames =
+
+    let getSkillGem sgjp skillName =
+        getSkillGems sgjp
+        |> Result.map (Seq.tryFind(isGemNameEqual skillName))
+        |> Result.bind (function | None -> Result.ErrMsg <| sprintf "Gem %s not found" skillName | Some g -> Result.Ok g)
+
+    let getGemReqLevels folderPath jsonFilename skillNames =
         match getSkillGems folderPath with
-        | None -> None
-        | Some gems ->
+        | Error msg -> Error msg
+        | Ok gems ->
             skillNames
             |> List.map(fun skillName ->
                 skillName,
@@ -41,7 +48,7 @@ module Gems =
                     |> List.tryFind(isGemNameEqual skillName)
                     |> Option.map(fun g -> g.Level)
             )
-            |> Some
+            |> Ok
 
 
 //// incomplete translation

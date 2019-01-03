@@ -5,9 +5,10 @@ open PathOfSupporting.Internal.Helpers
 
 type Character = {Name:string;League:string; Class:string;Level:int}
 [<RequireQualifiedAccess>]
+[<NoComparison>]
 type GetResult =
     |Success of Character[]
-    |FailedDeserialize
+    |FailedDeserialize of PoSError
     |FailedHttp of string
 let getCharacters accountName =
     async{
@@ -20,11 +21,11 @@ let getCharacters accountName =
         let! resp = Async.AwaitTask <| client.PostAsync("https://www.pathofexile.com/character-window/get-characters", hc)
         if resp.IsSuccessStatusCode then
             let! raw = Async.AwaitTask <| resp.Content.ReadAsStringAsync()
-            let chars:Character[] option = SuperSerial.deserialize raw
+            let chars:Character[] PoSResult = SuperSerial.deserialize raw
             match chars with
-            | Some chars ->
+            | Ok chars ->
                 return GetResult.Success chars
-            | None ->
-                return GetResult.FailedDeserialize
+            | Error x ->
+                return GetResult.FailedDeserialize x
         else return GetResult.FailedHttp <| sprintf "Fail:%A" resp.StatusCode
     }
