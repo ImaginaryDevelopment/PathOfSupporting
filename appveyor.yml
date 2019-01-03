@@ -27,7 +27,7 @@ clone_depth: 1
 #deploy: off
 after_build:
   - cmd: ls
-  - cmd: nuget pack ./PoS/.nuspec
+  - cmd: nuget pack ./PoS/PathOfSupporting.nuspec
   - cmd: dir
 deploy:
   provider: NuGet
