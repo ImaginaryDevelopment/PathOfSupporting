@@ -25,6 +25,8 @@ on_finish :
 #Here we’re telling AppVeyor’s git client to only clone the current branch and no history. We don’t need any of the history to build the application, so this will speed up the clone slightly. This, in turn, will make the whole build time faster.^
 clone_depth: 1
 #deploy: off
+after_build:
+  - cmd: nuget pack  PathOfSupporting.nuspec
 deploy:
   provider: NuGet
   server:                  # remove to push to NuGet.org
