@@ -29,6 +29,8 @@ after_build:
   - cmd: ls
   - cmd: nuget pack ./PoS/PathOfSupporting.nuspec
   - cmd: dir
+artifacts:
+  - path: '**\*.nupkg' # find all NuGet packages recursively
 deploy:
   provider: NuGet
   server:                  # remove to push to NuGet.org
