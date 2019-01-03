@@ -49,7 +49,8 @@
 
         <!-- Dependencies are automatically installed when the package is installed -->
         <dependencies>
-            <dependency id="Newtonsoft.Json" version="9.0" />
+            <dependency id="Newtonsoft.Json" version="12.0.1" />
+            <dependency id="Ionic.Zlib.Core" version="1.0" />
         </dependencies>
     </metadata>
 
