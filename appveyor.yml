@@ -1,4 +1,4 @@
-﻿# template from https://dotnetcore.gaprogman.com/2017/06/08/continuous-integration-and-appveyor/
+# template from https://dotnetcore.gaprogman.com/2017/06/08/continuous-integration-and-appveyor/
 version: '1.0.{build}'
 image: Visual Studio 2017
 branches:
@@ -12,9 +12,10 @@ install:
 before_build:
   # Display .NET Core version
   - cmd: dotnet --version
- # - cmd: dir
   - cmd: ls
+  - cmd: dir PoS
   # Display minimal restore text
+  #C:\projects\PathOfSupporting\PoS\PathOfSupporting.fsproj
   - cmd: dotnet restore ./PoS/PathOfSupporting.csproj --verbosity m
 build_script:
   # output will be in ./src/bin/debug/netcoreapp1.1/publish
