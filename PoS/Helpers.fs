@@ -208,6 +208,11 @@ module StringPatterns =
         if m.Success then
             Some m
         else None
+    let (|RMatches|_|) (p:string) (x:string) = 
+        let r = Regex.Matches(x,p)
+        if r.Count > 0 then
+            Some r
+        else None
 
     let (|EndsWithI|_|) d =
         function
