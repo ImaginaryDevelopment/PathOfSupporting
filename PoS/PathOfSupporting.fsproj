@@ -8,6 +8,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <WarningLevel>5</WarningLevel>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <OutputPath>bin\lib\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
