@@ -20,7 +20,7 @@
         <projectUrl>http://github.com/contoso/UsefulStuff</projectUrl>
 
          <!-- License information is displayed on the gallery -->
-        <license type="expression">MIT</license>
+        <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
         
 
         <!-- The icon is used in Visual Studio's package manager UI -->
