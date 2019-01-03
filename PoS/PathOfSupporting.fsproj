@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include=".nuspec" />
     <Compile Include="BReusable.fs" />
     <Compile Include="Helpers.fs" />
     <Compile Include="Schema.fs" />

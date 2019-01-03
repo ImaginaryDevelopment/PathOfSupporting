@@ -20,7 +20,7 @@
         <projectUrl>http://github.com/contoso/UsefulStuff</projectUrl>
 
          <!-- License information is displayed on the gallery -->
-        <license type="expression">Apache-2.0</license>
+        <license type="expression">MIT</license>
         
 
         <!-- The icon is used in Visual Studio's package manager UI -->
@@ -33,19 +33,19 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
 
         <!-- Any details about this particular release -->
-        <releaseNotes>Bug fixes and performance improvements</releaseNotes>
+        <releaseNotes>Initial Release</releaseNotes>
 
         <!-- 
             The description can be used in package manager UI. Note that the
             nuget.org gallery uses information you add in the portal. 
         -->
-        <description>Core utility functions for web applications</description>
+        <description>Core utility functions for applications,scripts, and tools that work with Path of Exile</description>
 
         <!-- Copyright information -->
-        <copyright>Copyright ©2016 Contoso Corporation</copyright>
+        <copyright>Copyright ©2019 ImaginaryDevelopment</copyright>
 
         <!-- Tags appear in the gallery and can be used for tag searches -->
-        <tags>web utility http json url parsing</tags>
+        <tags>pathofexile fsharp</tags>
 
         <!-- Dependencies are automatically installed when the package is installed -->
         <dependencies>
@@ -55,7 +55,7 @@
     </metadata>
 
     <!-- A readme.txt to display when the package is installed -->
-    <files>
+    <!--<files>
         <file src="readme.txt" target="" />
-    </files>
+    </files>-->
 </package>
