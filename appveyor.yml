@@ -26,7 +26,7 @@ on_finish :
 clone_depth: 1
 #deploy: off
 after_build:
-  - cmd: nuget pack  PathOfSupporting.nuspec
+  - cmd: nuget pack ./PoS/PathOfSupporting.nuspec
 deploy:
   provider: NuGet
   server:                  # remove to push to NuGet.org
