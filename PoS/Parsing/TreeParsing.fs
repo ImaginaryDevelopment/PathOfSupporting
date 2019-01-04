@@ -91,7 +91,7 @@ module Gems =
 //            var passiveSkillTreeData = ...
 module PassiveJsParsing =
     module Impl =
-        open System.Buffers.Text
+        //open System.Buffers.Text
 
         type Node = {
                 g:int

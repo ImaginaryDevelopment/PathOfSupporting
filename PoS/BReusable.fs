@@ -1362,7 +1362,7 @@ module Diagnostics =
         System.IO.File.AppendAllText(filename,msg)
 
     let logToEventLog (s:string) =
-#if NETSTANDARD
+#if !NETSTANDARD
         use eventLog = new EventLog("Application")
         eventLog.Source <- "Application"
         eventLog.WriteEntry s

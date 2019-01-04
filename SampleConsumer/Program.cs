@@ -10,6 +10,7 @@ namespace SampleConsumer
     {
         static void Main(string[] args)
         {
+            Parsing.ParseItem();
         }
     }
 }

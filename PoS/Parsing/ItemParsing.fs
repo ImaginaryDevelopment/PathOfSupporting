@@ -42,6 +42,9 @@ module Resistances =
     // let getText () = System.Windows.Forms.Clipboard.GetText()
     // also see https://stackoverflow.com/questions/44205260/net-core-copy-to-clipboard for clipboard issues on .net core
 
+    type ItemValue ={Resistance:string;Value:int}
+
+    // get resistance totals and summary total
     let getValues =
         function
         | RMatches @"([+-]\d+)% to (?:(all Elemental|Fire|Cold|Chaos|Lightning)(?: and )?)+ Resistances?" r ->
@@ -54,6 +57,7 @@ module Resistances =
             |> List.ofSeq
             |> List.sortBy (fst >> (=) "Chaos")
             |> foldTotal
+            |> List.map(fun (x,y) -> {Resistance=x;Value=y})
             |> Ok
         | txt -> errMsg "Could not match"
 
