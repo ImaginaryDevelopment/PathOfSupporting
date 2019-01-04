@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <None Include="PathOfSupporting.nuspec" />
+    <Compile Include="Configuration.fs" />
     <Compile Include="BReusable.fs" />
     <Compile Include="Helpers.fs" />
     <Compile Include="Schema.fs" />
@@ -21,6 +22,7 @@
     <Compile Include="Parsing\TreeParsing.fs" />
     <Compile Include="Parsing\HtmlParsing.fs" />
     <Compile Include="Dps.fs" />
+    <Compile Include="CHelpers.fs" />
     <Compile Include="Program.fs" />
     <None Include="CalcDpsTests.fsx" />
     <None Include="GetCharacters.linq" />

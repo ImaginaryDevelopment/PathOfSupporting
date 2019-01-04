@@ -1,4 +1,4 @@
-﻿
+﻿// test dps.fs, throws an exception on any test failure
 #load "Dps.fs"
 
 open PathOfSupporting.Dps

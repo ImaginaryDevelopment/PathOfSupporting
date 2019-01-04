@@ -17,7 +17,6 @@ type Result<'t,'tErr> with
     static member ErrMsg msg = errMsg msg
     static member Ex msg ex = errMsgEx msg ex
 
-
 module Reflection =
     open BReusable
     open Microsoft.FSharp.Reflection
