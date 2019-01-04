@@ -3,6 +3,7 @@
 // conversions and attack speed not included yet
 
 open Configuration
+open Configuration.Pad
 
 type NumberBase = decimal
 // general game math formula(s)
@@ -98,6 +99,7 @@ open Skills
 //type WeaponSkill = {Skill:Skill; Weapon:Weapon} with
 //    member x.Min = x.Weapon.Min * x.Weapon.Speed * x.Skill.Eff
 module Hits =
+
     // adds include things like added flat, added X from other sources (Jewels,Gear etc. not to include the flats on the weapon)
     let getHitBase (sk:Skill) (add:DamageRange option) (w:Weapon) =
         w.GetDmg Phys

@@ -1,8 +1,9 @@
 ﻿// test dps.fs, throws an exception on any test failure
+#load "Configuration.fs"
 #load "Dps.fs"
 
 open PathOfSupporting.Dps
-open Pad
+open PathOfSupporting.Configuration.Pad
 open GameMath
 open Skills
 open Hits
