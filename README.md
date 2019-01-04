@@ -2,6 +2,8 @@
 A .net helper library for tools working with Path of Exile or Path of Building
 Call into it from any .net Language
 
+[![Build status](https://ci.appveyor.com/api/projects/status/85y72cy90rs59wkv?svg=true)](https://ci.appveyor.com/project/ImaginaryDevelopment/pathofsupporting)
+
 ## Major Sections:
 
 ### Skill gem info
