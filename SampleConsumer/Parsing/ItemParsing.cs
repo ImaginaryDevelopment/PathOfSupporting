@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.FSharp.Core;
 
+using CHelpers;
+
 using static PathOfSupporting.Configuration.Pad.Extensions;
 
 namespace SampleConsumer
@@ -44,18 +46,17 @@ namespace SampleConsumer
         public static void ParseItem(string itemText)
         {
             var values = PathOfSupporting.ItemParsing.Resistances.getValues(itemText);
-            if (values.IsOk && values.ResultValue?.ToList() is var itemLines)
+            if (values.GetOkOrNull() is var itemLines)
             {
                 itemLines.Dump();
             }
-            else if (values.IsError && values.GetErrOrDefault() is var e)
+            else if (values.GetErrOrDefault() is var e)
             {
                 var errorDisplay = new { Msg = e.Item1, Ex = e.Item2 };
                 errorDisplay.Dump();
             }
             else
                 values.Dump();
-
         }
 
     }

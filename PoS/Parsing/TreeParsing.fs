@@ -38,16 +38,20 @@ module Gems =
         |> Result.map (Seq.tryFind(isGemNameEqual skillName))
         |> Result.bind (function | None -> Result.ErrMsg <| sprintf "Gem %s not found" skillName | Some g -> Result.Ok g)
 
+    // returns gems in the name terms you input, so if you Arcane Surge comes in, that's the name that goes back out
+    // even if the gem name is officially Arcane Surge Support
+    [<Struct>]
+    type GemLevelInfo = {ProvidedName:string;MatchedName:string;LevelRequirement:int option}
     let getGemReqLevels sgjp skillNames =
         match getSkillGems sgjp with
         | Error msg -> Error msg
         | Ok gems ->
             skillNames
             |> Seq.map(fun skillName ->
-                skillName,
-                    gems
-                    |> List.tryFind(isGemNameEqual skillName)
-                    |> Option.map(fun g -> g.Level)
+                match gems |> List.tryFind(isGemNameEqual skillName) with
+                // should we assume anything less than 1 means the parsing was bad or there isn't one, so we have a default coming in?
+                |Some g -> {ProvidedName=skillName;MatchedName=g.Name; LevelRequirement=Some g.Level}
+                | None -> {ProvidedName=skillName;MatchedName=null;LevelRequirement=None}
             )
             |> List.ofSeq
             :> IReadOnlyList<_>

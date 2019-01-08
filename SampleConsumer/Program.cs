@@ -13,6 +13,7 @@ namespace SampleConsumer
             ItemParsing.ParseItem();
             Parsing.TreeParsing.GetSkillGem();
             Parsing.TreeParsing.GetSkillGems();
+            Parsing.TreeParsing.GetGemReqLevels();
             Console.ReadLine();
         }
     }
