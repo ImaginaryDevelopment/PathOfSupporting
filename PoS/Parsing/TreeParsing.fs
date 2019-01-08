@@ -13,24 +13,29 @@ type NodeType =
     |Keystone
     |Mastery
     |JewelSocket
+type JsonResourcePath = {ResourceDirectory:string; Filename:string option}
+module Impl =
+    /// defaultFilename argument is intended for internal use
+    /// should be something like "Gems.json", "Gems.3.5.json", "Passives.json" ...
+    let getResourcePath defaultFilename {ResourceDirectory=rd; Filename=fOverrideOpt} =
+            let jsonFilename = defaultArg fOverrideOpt defaultFilename
+            let path = IO.Path.Combine(rd,jsonFilename)
+            if IO.File.Exists path then Ok path
+            else Result.ErrMsg <| sprintf "File not found:%s" path
+
+/// things we can read out of the Path of Exile official Gems.json
 module Gems =
 
     // make methods less stringly typed
-    type SkillGemJsonPath = {ResourceDirectory:string; Filename:string option}
     type Gem = {SkillId:string; Name:string; Level:int; Quality:int;Enabled:bool}
     let isGemNameEqual skillName (x:Gem) = String.equalsI x.Name skillName || String.equalsI (sprintf "%s support" skillName) x.Name
-    let getSkillGems {ResourceDirectory=folderPath;Filename=jsonFilename} =
-        let jsonFilename = defaultArg jsonFilename "Gems3.5.json"
-        let path = IO.Path.Combine(folderPath,jsonFilename)
-        if IO.File.Exists path then
+    let getSkillGems rp =
+        Impl.getResourcePath "Gems3.5.json" rp
+        |> Result.bind(fun path ->
             path
             |> IO.File.ReadAllText
             |> SuperSerial.deserialize<Gem list>
-        else
-            let msg = sprintf "Could not find gems file at %s" path
-            if Configuration.debug then
-                eprintfn "%s" msg
-            Result.ErrMsg msg
+        )
 
 
     let getSkillGem sgjp skillName =
@@ -93,9 +98,8 @@ module Gems =
 
 
 // based on the javascript object the poe official tree viewer/planner returns
-//require(['main'], function() {
-//        require(['skilltree'], function (PassiveSkillTree) {
-//            var passiveSkillTreeData = ...
+
+/// things we can read out of the Path of Exile official Passives.json
 module PassiveJsParsing =
     module Impl =
         //open System.Buffers.Text
@@ -105,15 +109,18 @@ module PassiveJsParsing =
                 m:bool
                 o:int
                 da:int
+                /// name
                 dn:string
                 ia:int
                 id:int
                 ``in``:int list
                 ks:bool
                 sa:int
+                /// skill effects/descriptions
                 sd:string list
                 ``not``:bool
                 ``out``:int list
+                /// appears to be related to Scion specialization nodes
                 spc: int list
                 icon:string
                 oidx:int
@@ -121,9 +128,19 @@ module PassiveJsParsing =
                 ascendancyName:string
                 isMultipleChoice:bool
                 isAscendancyStart:bool
+                /// Scion ascendency option
                 passivePointsGranted:int
+                /// Scion Specialization nodes
                 isMultipleChoiceOption:bool
-        }
+        } with
+            member x.Effects = x.sd
+            member x.Name = x.dn
+            member x.IsNotable = x.not
+            member x.IsKeyStone = x.ks
+            member x.IsMastery = x.m
+            member x.StrengthAdded = x.sa
+            member x.DexterityAdded = x.da
+            member x.IntelligenceAdded = x.ia
 
         [<NoComparison>]
         type PassiveLookup = {
@@ -135,16 +152,19 @@ module PassiveJsParsing =
                 nodes:Dictionary<int,Node>
                 groups:JObject
                 extraImages:JObject
-                characterData:JArray
+                // holds base attributes for classes
+                characterData:JObject
                 // don't want this one for now at least
                 //assets:obj
                 constants:JObject
         }
 
-        let getMappedNodes folderPath =
-            IO.Path.Combine(folderPath,"Passives3.5.json")
-            |> IO.File.ReadAllText
-            |> SuperSerial.deserialize<PassiveLookup>
+        let getMappedNodes rp =
+            Impl.getResourcePath "Passives3.5.json" rp
+            |> Result.bind(
+                IO.File.ReadAllText
+                >> SuperSerial.deserialize<PassiveLookup>
+            )
 
         let decodebase64Url (x:string) =
             let partial =
@@ -183,17 +203,16 @@ module PassiveJsParsing =
             | RMatch "AAAA[^?]+" m -> Some m.Value
             | _ -> None
 
-    open Impl
-    let mutable nodeCache : PassiveLookup option= None
-    type Tree = {Version:int; Class:ChClass option;Nodes:Node list}
-    let decodeUrl (nodes:IDictionary<int,Node>) url =
+    let mutable nodeCache : Impl.PassiveLookup option= None
+    type Tree = {Version:int; Class:ChClass option;Nodes:Impl.Node list}
+    let decodeUrl (nodes:IDictionary<int,Impl.Node>) url =
         url
-        |> regPassiveTree
+        |> Impl.regPassiveTree
         |> Option.bind(fun x ->
             try
                 x
-                |> decodebase64Url
-                |> decodePayload
+                |> Impl.decodebase64Url
+                |> Impl.decodePayload
                 |> fun x ->
                     {
                         Version=x.Version
@@ -210,6 +229,15 @@ module PassiveJsParsing =
                 printfn "Failed to decodeUrl '%s' '%s'" ex.Message url
                 None
         )
+    let decodePassives rp url =
+        Impl.getMappedNodes rp
+        |> Result.bind(fun nc ->
+            decodeUrl nc.nodes url
+            |> function
+                |Some x -> Ok x
+                |None -> Result.ErrMsg "Decode Failed"
+        )
+
 
 // based on https://github.com/Kyle-Undefined/PoE-Bot/blob/997a15352c83b0959da03b1f59db95e4a5df758c/Helpers/PathOfBuildingHelper.cs
 module PathOfBuildingParsing =

@@ -46,7 +46,7 @@ namespace SampleConsumer
         public static void ParseItem(string itemText)
         {
             var values = PathOfSupporting.ItemParsing.Resistances.getValues(itemText);
-            if (values.GetOkOrNull() is var itemLines)
+            if (values.IsOk && values.GetOkOrNull() is var itemLines)
             {
                 itemLines.Dump();
             }
