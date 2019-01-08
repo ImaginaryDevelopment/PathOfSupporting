@@ -56,7 +56,7 @@ module GameMath=
             | Some v -> t + v
             | None -> t
         ) (LanguagePrimitives.GenericZero)
-        
+
     let foldMore :seq<NumberBase> -> NumberBase =
         Seq.fold (fun t v ->
             if v > LanguagePrimitives.GenericOne then invalidOp "Bad more mod"
@@ -175,7 +175,7 @@ module private MyExamples =
                         ]
             Adds=Map[Phys, {Min=9.0m;Max=15.0m} ]
         }
-        
+
     iveBeenImpaled 
     |> Dump
     |> ignore
