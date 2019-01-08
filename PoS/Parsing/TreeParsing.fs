@@ -28,7 +28,8 @@ module Gems =
             |> SuperSerial.deserialize<Gem list>
         else
             let msg = sprintf "Could not find gems file at %s" path
-            eprintfn "%s" msg
+            if Configuration.debug then
+                eprintfn "%s" msg
             Result.ErrMsg msg
 
 

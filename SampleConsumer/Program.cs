@@ -10,7 +10,9 @@ namespace SampleConsumer
     {
         static void Main(string[] args)
         {
-            Parsing.ParseItem();
+            ItemParsing.ParseItem();
+            Parsing.TreeParsing.GetSkillGems();
+            Console.ReadLine();
         }
     }
 }

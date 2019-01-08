@@ -9,7 +9,7 @@ using static PathOfSupporting.Configuration.Pad.Extensions;
 
 namespace SampleConsumer
 {
-    static class Parsing
+    public static class ItemParsing
     {
         // use the extension method
         public static void ParseItem()
@@ -24,21 +24,26 @@ namespace SampleConsumer
                 +27% to Lightning Resistance"
             );
             values.ProcessResult(x => x.Dump(), (msg, err) => (msg, err).Dump());
-
         }
+
         // example with no inputs
         // less extension methods used
         public static void ParseItem2()
         {
-            var values = PathOfSupporting.ItemParsing.Resistances.getValues(@"
+            var text = @"
                 +16% to Cold and Lightning Resistances
                 Adds 4 to 9 Physical Damage to Attacks
                 +10 to all Attributes
                 +63 to maximum Mana
                 17% increased Rarity of Items found
                 +43% to Fire Resistance
-                +27% to Lightning Resistance"
-            );
+                +27% to Lightning Resistance" ;
+            ParseItem(text);
+        }
+
+        public static void ParseItem(string itemText)
+        {
+            var values = PathOfSupporting.ItemParsing.Resistances.getValues(itemText);
             if (values.IsOk && values.ResultValue?.ToList() is var itemLines)
             {
                 itemLines.Dump();
@@ -50,9 +55,6 @@ namespace SampleConsumer
             }
             else
                 values.Dump();
-        }
-        public static void ParseItem(string itemText)
-        {
 
         }
 
