@@ -19,6 +19,7 @@
     <Compile Include="Classes.fs" />
     <Compile Include="Parsing\ItemParsing.fs" />
     <Compile Include="Parsing\TreeParsing.fs" />
+    <Compile Include="Parsing\PoBParsing.fs" />
     <Compile Include="Parsing\HtmlParsing.fs" />
     <Compile Include="Dps.fs" />
     <Compile Include="CHelpers.fs" />

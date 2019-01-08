@@ -1,4 +1,4 @@
-﻿module PathOfSupporting.ItemParsing // from PoE calc item resistances
+﻿module PathOfSupporting.Parsing.Items // from PoE calc item resistances
 open System.Text.RegularExpressions
 open PathOfSupporting.Internal.Helpers
 open PathOfSupporting.Internal.Helpers.StringPatterns

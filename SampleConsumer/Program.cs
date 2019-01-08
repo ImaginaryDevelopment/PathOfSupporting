@@ -15,6 +15,9 @@ namespace SampleConsumer
             Parsing.TreeParsing.Gems.GetSkillGems();
             Parsing.TreeParsing.Gems.GetGemReqLevels();
             Parsing.TreeParsing.Passives.DecodeUrl();
+            //Parsing.TreeParsing.PathOfBuilding.ParsePastebin();
+            Parsing.TreeParsing.PathOfBuilding.ParseCode();
+            Parsing.TreeParsing.PathOfBuilding.ParseMinionPasteBin();
             Console.ReadLine();
         }
     }

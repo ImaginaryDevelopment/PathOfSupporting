@@ -62,7 +62,8 @@ module Reflection =
 [<AutoOpen>]
 module Utils =
     open System.IO
-    let dump titleOpt (f:_ -> obj) (x:'t) =
+    let dump titleOpt extensionOverrideOpt (f:_ -> obj) (x:'t) =
+        let extension = defaultArg extensionOverrideOpt "json"
         if System.Diagnostics.Debugger.IsAttached then
             let vsCodePath = @"C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd"
             if File.Exists vsCodePath then
@@ -73,11 +74,14 @@ module Utils =
                         |Some (title:string) ->
                             if Path.IsPathRooted title then
                                 title
-                            else Path.Combine(Path.GetTempPath(),sprintf "%s.json" title)
+                            else Path.Combine(Path.GetTempPath(),sprintf "%s.%s" title extension)
                         | None -> 
                             let fp = Path.GetTempFileName()
                             // we want to control the extension
-                            Path.Combine(Path.GetDirectoryName fp, sprintf "%s.json" <| Path.GetFileNameWithoutExtension fp)
+                            let path =
+                                let fn = Path.GetFileNameWithoutExtension fp
+                                sprintf "%s.%s"  fn extension
+                            Path.Combine(Path.GetDirectoryName fp, path)
                 match f x with
                 | null -> "null"
                 | :? string as txt -> txt
@@ -285,6 +289,6 @@ module Xml =
         toXmlNode xe
         |> SuperSerial.serializeXmlNodePretty
 
-    let dumpXE titleOpt (xe:XElement) = dump titleOpt (serializeXElementPretty>>box) xe
+    let dumpXE titleOpt extensionOverrideOpt (xe:XElement) = dump titleOpt extensionOverrideOpt (serializeXElementPretty>>box) xe
 
 

@@ -16,7 +16,7 @@ namespace SampleConsumer
         // use the extension method
         public static void ParseItem()
         {
-            var values = PathOfSupporting.ItemParsing.Resistances.getValues(@"
+            var values = PathOfSupporting.Parsing.Items.Resistances.getValues(@"
                 +16% to Cold and Lightning Resistances
                 Adds 4 to 9 Physical Damage to Attacks
                 +10 to all Attributes
@@ -45,7 +45,7 @@ namespace SampleConsumer
 
         public static void ParseItem(string itemText)
         {
-            var values = PathOfSupporting.ItemParsing.Resistances.getValues(itemText);
+            var values = PathOfSupporting.Parsing.Items.Resistances.getValues(itemText);
             if (values.IsOk && values.GetOkOrNull() is var itemLines)
             {
                 itemLines.Dump();
