@@ -13,6 +13,8 @@ namespace SampleConsumer.Parsing
     {
         public static void GetSkillGems()
         {
+            // expecting to be running from PathOfSupporting/SampleConsumer/bin/debug
+            // target is ../../../PoS
             var gemJsonPath = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))), "PoS");
             var sgResult = PathOfSupporting.TreeParsing.Gems.getSkillGems(new PathOfSupporting.TreeParsing.Gems.SkillGemJsonPath(gemJsonPath, null));
             if(sgResult.IsOk && sgResult.ResultValue?.ToList() is var sgs)
