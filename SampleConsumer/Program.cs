@@ -11,6 +11,7 @@ namespace SampleConsumer
         static void Main(string[] args)
         {
             ItemParsing.ParseItem();
+            Parsing.TreeParsing.GetSkillGem();
             Parsing.TreeParsing.GetSkillGems();
             Console.ReadLine();
         }

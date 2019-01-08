@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using static CHelpers;
 using static PathOfSupporting.Configuration.Pad.Extensions;
+using static PathOfSupporting.TreeParsing.Gems;
 
 namespace SampleConsumer.Parsing
 {
@@ -13,9 +14,7 @@ namespace SampleConsumer.Parsing
     {
         public static void GetSkillGems()
         {
-            // expecting to be running from PathOfSupporting/SampleConsumer/bin/debug
-            // target is ../../../PoS
-            var gemJsonPath = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))), "PoS");
+            var gemJsonPath = GetGemPath();
             var sgResult = PathOfSupporting.TreeParsing.Gems.getSkillGems(new PathOfSupporting.TreeParsing.Gems.SkillGemJsonPath(gemJsonPath, null));
             if(sgResult.IsOk && sgResult.ResultValue?.ToList() is var sgs)
             {
@@ -31,5 +30,18 @@ namespace SampleConsumer.Parsing
             }
 
         }
+        public static void GetSkillGem()
+        {
+            var sgResult = PathOfSupporting.TreeParsing.Gems.getSkillGem(Sgjp, "Vaal Arc");
+            if (sgResult.IsOk && sgResult.ResultValue is var g)
+            {
+                Console.WriteLine("Found " + g.Name + " - " + g.Level);
+            }
+        }
+
+            // expecting to be running from PathOfSupporting/SampleConsumer/bin/debug
+            // target is ../../../PoS
+        internal static string GetGemPath() => Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))), "PoS");
+        internal static SkillGemJsonPath Sgjp => new SkillGemJsonPath(GetGemPath(), null);
     }
 }
