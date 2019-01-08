@@ -43,12 +43,14 @@ module Gems =
         | Error msg -> Error msg
         | Ok gems ->
             skillNames
-            |> List.map(fun skillName ->
+            |> Seq.map(fun skillName ->
                 skillName,
                     gems
                     |> List.tryFind(isGemNameEqual skillName)
                     |> Option.map(fun g -> g.Level)
             )
+            |> List.ofSeq
+            :> IReadOnlyList<_>
             |> Ok
 
 
