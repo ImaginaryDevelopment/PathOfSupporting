@@ -10,6 +10,7 @@ Call into it from any .net Language
   * mapped from PoE's official passive gem json [TreeParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/TreeParsing.fs#L16)
 ### Item Parsing
   * parses out resists and total up resistances for an item - [ItemParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/ItemParsing.fs)
+  * sample C# consumer - [Parsing.cs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/SampleConsumer/Parsing.cs)
   * planned: more item parsing/summations
 ### Tree Parsing
   * [TreeParsing.fs - PassiveJsParsing](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/TreeParsing.fs#L92)
