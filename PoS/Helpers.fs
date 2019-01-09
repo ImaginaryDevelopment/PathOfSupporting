@@ -2,20 +2,47 @@
 open System
 open System.Collections.Generic
 open System.Linq
+open System.Runtime.ExceptionServices
 
 // type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
 ///string * exn option
 type PoSError = string * exn option
+type PoSRethrowable = string*ExceptionDispatchInfo
 // type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
 /// Result<'t,PoSError>
 type PoSResult<'t> = Result<'t,PoSError>
+type PoSResultDI<'t> = Result<'t,PoSRethrowable>
 
 let errMsg msg :PoSResult<'t> = Result.Error(msg,None)
-let errMsgEx msg ex :PoSResult<'t> = Result.Error(msg,Some ex)
+let errMsgEx msg (ex:exn) :PoSResult<'t> = Result.Error(msg,Some ex)
 // could name the extensions Error (but then... what is that helping?
 type Result<'t,'tErr> with
     static member ErrMsg msg = errMsg msg
     static member Ex msg ex = errMsgEx msg ex
+    static member ExDI msg ex = Result.Error(msg,ExceptionDispatchInfo.Capture ex)
+    static member GetOrRethrow (posr:PoSResultDI<_>) =
+        match posr with
+        | Ok x -> x
+        | Error(msg,edi) ->
+            if PathOfSupporting.Configuration.debug then
+                eprintfn "%s" msg
+            edi.Throw()
+            invalidOp "Throw should return 't, this line should never be hit"
+module Seq =
+    let rateLimit limit items =
+        seq{
+            let sw = System.Diagnostics.Stopwatch()
+            sw.Start()
+            for item in items do
+                yield item
+                sw.Stop()
+                if sw.Elapsed.Milliseconds < limit then
+                    let remainder = limit - sw.Elapsed.Milliseconds
+                    // printfn "Elapsed %ims. Sleeping for %ims" sw.Elapsed.Milliseconds remainder
+                    System.Threading.Thread.Sleep remainder
+                    sw.Reset()
+                    sw.Start()
+        }
 
 module Reflection =
     open BReusable
@@ -90,8 +117,9 @@ module Utils =
                     File.WriteAllText(tmp,text)
                 // without full path it seemingly ignored the command
                 // might be something else in path that code.cmd pulls in
-                System.Diagnostics.Process.Start(vsCodePath,tmp)
-                |> ignore
+                if PathOfSupporting.Configuration.allowProcessStart then
+                    System.Diagnostics.Process.Start(vsCodePath,tmp)
+                    |> ignore
 
 module Async =
     let map f x =

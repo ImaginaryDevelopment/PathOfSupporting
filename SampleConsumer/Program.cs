@@ -18,6 +18,8 @@ namespace SampleConsumer
             //Parsing.TreeParsing.PathOfBuilding.ParsePastebin();
             Parsing.TreeParsing.PathOfBuilding.ParseCode();
             Parsing.TreeParsing.PathOfBuilding.ParseMinionPasteBin();
+            StashAPI.FetchOne();
+            StashAPI.FetchLeagueStashes();
             Console.ReadLine();
         }
     }

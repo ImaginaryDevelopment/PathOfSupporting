@@ -2,6 +2,7 @@
 
 /// global debug flag, code in this lib should listen as to whether or not to console/debug/trace error output
 let mutable debug = true
+let mutable allowProcessStart = false
 /// for non-linqpad consumers: this provides display helpers
 /// for linqpad consumption:
 /// helpers so that the output in linqpad isn't cluttered by `Some _` table wrapper(s)
