@@ -3,7 +3,11 @@
 open System.Collections.Generic
 open Newtonsoft.Json.Linq
 
-type Item = {Name:string;NamePrefix:string; TypeLine:string; TypeLinePrefix:string; Verified:bool; Identified:bool; Corrupted:bool; League:string; Icon:string}
+// there are more uncaptured fields, see: https://github.com/CSharpPoE/PublicStash/blob/master/PublicStash/Model/Items/Item.cs
+type Item = {
+    Name:string;NamePrefix:string; TypeLine:string; TypeLinePrefix:string; Verified:bool; Identified:bool; Corrupted:bool; League:string; Icon:string
+    FrameType:string;Note:string;ILvl:int;H:int;W:int;X:int;Y:int
+}
 
 type Stash = {AccountName:string;LastCharacterName:string;Id:string; Stash:string;StashType:string;Public:bool; Items:Item[]}
 type ChangeSet = {ChangeId:string;Stashes:Stash list}
