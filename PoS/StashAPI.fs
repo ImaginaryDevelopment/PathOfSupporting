@@ -32,11 +32,22 @@ module Impl =
         async{
             try
                 let! result = f()
-                if debug then printfn "asyncTryRetry worked"
+                //if debug then printfn "asyncTryRetry worked"
                 return Ok result
             with ex ->
-                if tra.Retries> 0 then
-                    if debug then eprintfn "Failed asyncTry, trying again"
+                if tra.Retries > 0 then
+                    match ex with
+                    | :? System.AggregateException as aEx ->
+                        if debug then
+                            eprintfn "Failed asyncTry, agg '%A'" aEx.InnerException
+                            match aEx.InnerExceptions with
+                            | null -> ()
+                            | items ->
+                                items
+                                |> Seq.choose Option.ofObj
+                                |> Seq.iter(fun x -> eprintfn "  exMsg:%s" x.Message)
+                            eprintfn ""
+                    | _ -> if debug then eprintfn "Failed asyncTry, trying again after %s" ex.Message
                     match tra.RetryType with
                     | Immediate -> ()
                     | Rest ms -> System.Threading.Thread.Sleep(millisecondsTimeout=ms)
@@ -51,7 +62,7 @@ module Impl =
         use client = new System.Net.Http.HttpClient()
         let target = match changeIdOpt with | None -> target | Some x -> sprintf "%s?id=%s" target x
         let f () = client.GetStringAsync target |> Async.AwaitTask
-        asyncTryRetry {FailureMessage="fetchOneFailed"; RetryType=Rest 800;Retries=2} f
+        asyncTryRetry {FailureMessage="fetchOneFailed"; RetryType=Rest 800;Retries=4} f
         |> Async.RunSynchronously
 
     type SequenceState =
@@ -65,7 +76,7 @@ module Impl =
             let result =
                 fetchOne target changeIdOpt
                 |> Result.GetOrRethrow
-            dprintn "finished fetch"
+            //dprintn "finished fetch"
             result
             |> fContinue
             |> Some
@@ -74,7 +85,9 @@ module Impl =
         |> Seq.unfold(
             function
             | Start ->
-                dprintn "getting first item"
+                match startingChangeIdOpt with
+                | None -> dprintn "getting first item"
+                | Some changeId -> dprintn <| sprintf "getting first item %s" changeId
                 f startingChangeIdOpt
             | SequenceState.Continue changeId ->
                 dprintn (sprintf "getting %s" changeId)
