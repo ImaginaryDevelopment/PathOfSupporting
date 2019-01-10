@@ -6,6 +6,7 @@ open Newtonsoft.Json.Linq
 type Item = {Name:string;NamePrefix:string; TypeLine:string; TypeLinePrefix:string; Verified:bool; Identified:bool; Corrupted:bool; League:string; Icon:string}
 
 type Stash = {AccountName:string;LastCharacterName:string;Id:string; Stash:string;StashType:string;Public:bool; Items:Item[]}
+type ChangeSet = {ChangeId:string;Stashes:Stash list}
 
 module Impl =
     open PathOfSupporting
@@ -14,6 +15,8 @@ module Impl =
     open PathOfSupporting.Internal.Helpers
 
     let stashTabApiUrl = "http://www.pathofexile.com/api/public-stash-tabs"
+    // per https://www.reddit.com/r/pathofexiledev/comments/7ihlpe/psa_starting_change_id_for_abyss_league/
+    let firstAbyssChangeId = "111929789-117354395-110061941-127008893-118581490"
     let deserializeStashApi text = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,JToken>>(text)
 
     type RetryType=
@@ -51,7 +54,7 @@ module Impl =
     | Continue of nextChangeId:string
     | Finished
 
-    let fetchSeq target (fContinue: string -> 'T option * SequenceState)=
+    let fetchSeq target startingChangeIdOpt (fContinue: string -> 'T option * SequenceState)=
         let dprintn x = if Configuration.debug then printfn "%s" x
         let f changeIdOpt =
             let result =
@@ -67,7 +70,7 @@ module Impl =
             function
             | Start ->
                 dprintn "getting first item"
-                f None
+                f startingChangeIdOpt
             | SequenceState.Continue changeId ->
                 dprintn (sprintf "getting %s" changeId)
                 Some changeId
@@ -76,36 +79,41 @@ module Impl =
                 None
         )
         |> Seq.choose id
+    let mapChangeSet raw =
+        let data = deserializeStashApi raw
+        let nextChangeId = string data.["next_change_id"]
+        nextChangeId,data
 
 
     [<NoComparison>]
     type FetchDebugResult = {StashOpt:PoSResult<Stash>;Raw:string}
-    let fetchStashes targetOverride =
-        fetchSeq targetOverride
+    let fetchStashes targetOverride startingChangeIdOpt =
+        fetchSeq targetOverride startingChangeIdOpt
             // was used to have a key to cache results
             //(function | None -> "public-stash-tabs" | Some changeId -> sprintf "public-stash-tabs,%s" changeId)
             (function
                 |NonValueString _ -> None,Finished
                 |ValueString raw ->
-                    let data = deserializeStashApi raw
-                    let nextChangeId = data.["next_change_id"]
-                    Some data, Continue(nextChangeId |> string)
+                    let (nextChangeId,_) as x = mapChangeSet raw
+                    Some x, Continue nextChangeId
             )
         |> Seq.rateLimit 1000
-        |> Seq.collect(fun (dic:Dictionary<string,JToken>) ->
+        |> Seq.map(fun (changeId,dic:Dictionary<string,JToken>) ->
             let stashContainer =
                 dic.["stashes"] :?> JArray
                 |> Seq.cast<JObject>
                 |> Seq.map(fun jo -> {StashOpt=jo |> string |> SuperSerial.deserialize<Stash>;Raw=string jo})
-            stashContainer
+            changeId,stashContainer
         )
     ()
 
 module Fetch =
 
-    let fetchStashes targetOverride =
-        Impl.fetchStashes targetOverride
-        |> Seq.choose(function |{StashOpt=(Ok x)} -> Some x | _ -> None)
+    let fetchStashes targetOverride startingChangeIdOpt =
+        Impl.fetchStashes targetOverride startingChangeIdOpt
+        |> Seq.map(fun (changeId,items) ->
+            {ChangeId=changeId; Stashes=items |> Seq.choose (function |{StashOpt=(Ok x)} -> Some x | _ -> None) |> List.ofSeq}
+        )
 
 
 
