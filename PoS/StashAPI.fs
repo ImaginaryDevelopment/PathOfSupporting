@@ -15,8 +15,9 @@ module Impl =
     open PathOfSupporting.Internal.Helpers
 
     let stashTabApiUrl = "http://www.pathofexile.com/api/public-stash-tabs"
-    // per https://www.reddit.com/r/pathofexiledev/comments/7ihlpe/psa_starting_change_id_for_abyss_league/
-    let firstAbyssChangeId = "111929789-117354395-110061941-127008893-118581490"
+    (* appears we can't look at historic, the api only gives back stashes in their current form : 
+       https://www.reddit.com/r/pathofexiledev/comments/8ayz9b/list_of_changeids_and_their_and_the_approximate/
+    *)
     let deserializeStashApi text = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,JToken>>(text)
 
     type RetryType=
@@ -88,6 +89,7 @@ module Impl =
     [<NoComparison>]
     type FetchDebugResult = {StashOpt:PoSResult<Stash>;Raw:string}
     let fetchStashes targetOverride startingChangeIdOpt =
+        let mutable lastChangeId = None
         fetchSeq targetOverride startingChangeIdOpt
             // was used to have a key to cache results
             //(function | None -> "public-stash-tabs" | Some changeId -> sprintf "public-stash-tabs,%s" changeId)
@@ -97,6 +99,8 @@ module Impl =
                     let (nextChangeId,_) as x = mapChangeSet raw
                     Some x, Continue nextChangeId
             )
+        // don't return the same changeset again (in the unlikely event we got the last item on the stream - the changeId would be equal to current)
+        |> Seq.changes fst
         |> Seq.rateLimit 1000
         |> Seq.map(fun (changeId,dic:Dictionary<string,JToken>) ->
             let stashContainer =

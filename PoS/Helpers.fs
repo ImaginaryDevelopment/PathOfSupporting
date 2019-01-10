@@ -29,6 +29,19 @@ type Result<'t,'tErr> with
             edi.Throw()
             invalidOp "Throw should return 't, this line should never be hit"
 module Seq =
+    // return item 1, if item 2's key is different from 1, return it
+    // if item 3's key is different from 2 return it
+    // and so on
+    let changes f =
+        let mutable lastKey = None
+        Seq.choose(fun x ->
+            let key = f x
+            match lastKey with
+            | Some lastKey when key = lastKey -> None
+            | _ ->
+                lastKey <- Some key
+                Some x
+        )
     let rateLimit limit items =
         seq{
             let sw = System.Diagnostics.Stopwatch()
