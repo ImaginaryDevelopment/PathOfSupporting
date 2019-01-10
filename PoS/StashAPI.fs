@@ -1,4 +1,4 @@
-﻿namespace PathOfSupporting.StashAPI // translated from https://github.com/ImaginaryDevelopment/LinqPad/blob/master/LINQPad%20Queries/gamey/PoE%20stash%20tab%20api.linq
+namespace PathOfSupporting.StashAPI // translated from https://github.com/ImaginaryDevelopment/LinqPad/blob/master/LINQPad%20Queries/gamey/PoE%20stash%20tab%20api.linq
 
 open System.Collections.Generic
 open Newtonsoft.Json.Linq
@@ -11,7 +11,10 @@ type Item = {
 
 type Stash = {AccountName:string;LastCharacterName:string;Id:string; Stash:string;StashType:string;Public:bool; Items:Item[]}
 type ChangeSet = {ChangeId:string;Stashes:Stash list}
-
+type RetryBehavior =
+    // allows 0
+    | Retries of int
+    | Always
 module Impl =
     open PathOfSupporting
     open PathOfSupporting.Configuration
@@ -27,7 +30,7 @@ module Impl =
     type RetryType=
         | Immediate
         | Rest of milliSeconds:int
-    type TryRetryArguments = {RetryType:RetryType;FailureMessage:string; Retries:int}
+    type TryRetryArguments = {RetryType:RetryType;FailureMessage:string; Retries:RetryBehavior}
     let rec asyncTryRetry tra f:Async<PoSResultDI<_>> =
         async{
             try
@@ -35,7 +38,14 @@ module Impl =
                 //if debug then printfn "asyncTryRetry worked"
                 return Ok result
             with ex ->
-                if tra.Retries > 0 then
+                let retryOpt =
+                    match tra.Retries with
+                    | Always -> Some tra
+                    | Retries x when x > 0 ->
+                        Some {tra with Retries = Retries (x - 1)}
+                    | _ -> None
+                match retryOpt with
+                |Some tra ->
                     match ex with
                     | :? System.AggregateException as aEx ->
                         if debug then
@@ -50,19 +60,22 @@ module Impl =
                     | _ -> if debug then eprintfn "Failed asyncTry, trying again after %s" ex.Message
                     match tra.RetryType with
                     | Immediate -> ()
-                    | Rest ms -> System.Threading.Thread.Sleep(millisecondsTimeout=ms)
-                    return! asyncTryRetry {tra with Retries= tra.Retries - 1} f
-                else
+                    | Rest ms ->
+                        if debug then eprintfn"rested before next try"
+                        System.Threading.Thread.Sleep(millisecondsTimeout=ms)
+                        if debug then eprintfn "Rested, retrying now"
+                    return! asyncTryRetry tra f
+                |None ->
                     if debug then eprintfn "Ran out of retries, asyncTry fail"
                     return Result.ExDI tra.FailureMessage ex
         }
 
-    let fetchOne target changeIdOpt =
+    let fetchOne target changeIdOpt retryBehavior =
         let target = defaultArg target stashTabApiUrl
         use client = new System.Net.Http.HttpClient()
         let target = match changeIdOpt with | None -> target | Some x -> sprintf "%s?id=%s" target x
         let f () = client.GetStringAsync target |> Async.AwaitTask
-        asyncTryRetry {FailureMessage="fetchOneFailed"; RetryType=Rest 800;Retries=4} f
+        asyncTryRetry {FailureMessage="fetchOneFailed"; RetryType=Rest 1000;Retries=retryBehavior} f
         |> Async.RunSynchronously
 
     type SequenceState =
@@ -70,11 +83,11 @@ module Impl =
     | Continue of nextChangeId:string
     | Finished
 
-    let fetchSeq target startingChangeIdOpt (fContinue: string -> 'T option * SequenceState)=
+    let fetchSeq target startingChangeIdOpt retryBehavior (fContinue: string -> 'T option * SequenceState)=
         let dprintn x = if Configuration.debug then printfn "%s" x
         let f changeIdOpt =
             let result =
-                fetchOne target changeIdOpt
+                fetchOne target changeIdOpt retryBehavior 
                 |> Result.GetOrRethrow
             //dprintn "finished fetch"
             result
@@ -105,9 +118,9 @@ module Impl =
 
     [<NoComparison>]
     type FetchDebugResult = {StashOpt:PoSResult<Stash>;Raw:string}
-    let fetchStashes targetOverride startingChangeIdOpt =
+    let fetchStashes targetOverride startingChangeIdOpt retryBehavior =
         let mutable lastChangeId = None
-        fetchSeq targetOverride startingChangeIdOpt
+        fetchSeq targetOverride startingChangeIdOpt retryBehavior
             // was used to have a key to cache results
             //(function | None -> "public-stash-tabs" | Some changeId -> sprintf "public-stash-tabs,%s" changeId)
             (function
@@ -130,8 +143,8 @@ module Impl =
 
 module Fetch =
 
-    let fetchStashes targetOverride startingChangeIdOpt =
-        Impl.fetchStashes targetOverride startingChangeIdOpt
+    let fetchStashes targetOverride startingChangeIdOpt retryBehavior =
+        Impl.fetchStashes targetOverride startingChangeIdOpt retryBehavior
         |> Seq.map(fun (changeId,items) ->
             {ChangeId=changeId; Stashes=items |> Seq.choose (function |{StashOpt=(Ok x)} -> Some x | _ -> None) |> List.ofSeq}
         )
