@@ -14,7 +14,7 @@ type ChangeSet = {ChangeId:string;Stashes:Stash list}
 type RetryBehavior =
     // allows 0
     | Retries of int
-    | Always
+    | Infinite
 module Impl =
     open PathOfSupporting
     open PathOfSupporting.Configuration
@@ -40,7 +40,7 @@ module Impl =
             with ex ->
                 let retryOpt =
                     match tra.Retries with
-                    | Always -> Some tra
+                    | Infinite -> Some tra
                     | Retries x when x > 0 ->
                         Some {tra with Retries = Retries (x - 1)}
                     | _ -> None
@@ -126,8 +126,10 @@ module Impl =
             (function
                 |NonValueString _ -> None,Finished
                 |ValueString raw ->
-                    let (nextChangeId,_) as x = mapChangeSet raw
-                    Some x, Continue nextChangeId
+                    let nextChangeId,x = mapChangeSet raw
+                    let result = Some (lastChangeId |> Option.defaultValue null,x), Continue nextChangeId
+                    lastChangeId <- Some nextChangeId
+                    result
             )
         // don't return the same changeset again (in the unlikely event we got the last item on the stream - the changeId would be equal to current)
         |> Seq.changes fst
@@ -142,6 +144,7 @@ module Impl =
     ()
 
 module Fetch =
+    let betrayalStart = "287520528-295313691-282820675-313712239-301060502"
 
     let fetchStashes targetOverride startingChangeIdOpt retryBehavior =
         Impl.fetchStashes targetOverride startingChangeIdOpt retryBehavior

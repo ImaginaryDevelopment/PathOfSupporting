@@ -20,6 +20,7 @@ namespace SampleConsumer
             Parsing.TreeParsing.PathOfBuilding.ParseMinionPasteBin();
             StashAPI.FetchOne();
             StashAPI.FetchLeagueStashes();
+            StashAPI.FetchLeagueChangeSets();
             Console.ReadLine();
         }
     }

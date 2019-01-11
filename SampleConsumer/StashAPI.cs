@@ -16,10 +16,19 @@ namespace SampleConsumer
                 Console.WriteLine("Stash:" + x);
             else Console.Error.WriteLine("Failed to fetch a stash tab");
         }
-        // starts from 0, could take a very long time to find the betrayal stashes
+        public static void FetchLeagueChangeSets()
+        {
+            Console.WriteLine("Betrayal starts at " + Fetch.betrayalStart);
+            // deferred, IEnumerable is not ToList or anything, and probably shouldn't ever be, this stream is huge.
+            var stashes = Fetch.fetchStashes(null, Fetch.betrayalStart, RetryBehavior.Infinite).Where(x => x.Stashes.Any(stash => stash.Items.Any(item => item.League?.Contains( "Betrayal") == true)));
+            // nibble just 5 off the stream
+            foreach (var stash in stashes.Take(5))
+                Console.WriteLine("Betrayal Stash:" + stash.ChangeId);
+        }
+        // if you start from 0, it could take a very long time to find the betrayal stashes
         public static void FetchLeagueStashes()
         {
-            var stashes = Fetch.fetchStashes(null, "44741247-47503727-44284966-51573999-47973846", RetryBehavior.Always).SelectMany(x => x.Stashes).Where(stash => stash.Items.Any(item => item.League?.Contains( "Betrayal") == true));
+            var stashes = Fetch.fetchStashes(null, Fetch.betrayalStart, RetryBehavior.Infinite).SelectMany(x => x.Stashes).Where(stash => stash.Items.Any(item => item.League?.Contains( "Betrayal") == true));
             foreach (var stash in stashes.Take(5))
                 Console.WriteLine("Betrayal Stash:" + stash);
         }
