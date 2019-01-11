@@ -23,6 +23,7 @@
     <Compile Include="Parsing\TreeParsing.fs" />
     <Compile Include="Parsing\PoBParsing.fs" />
     <Compile Include="Parsing\HtmlParsing.fs" />
+    <Compile Include="Watching\LogWatching.fs" />
     <Compile Include="Dps.fs" />
     <Compile Include="CHelpers.fs" />
     <Compile Include="Program.fs" />
