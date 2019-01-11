@@ -21,6 +21,8 @@ namespace SampleConsumer
             StashAPI.FetchOne();
             StashAPI.FetchLeagueStashes();
             StashAPI.FetchLeagueChangeSets();
+            Console.WriteLine();
+            Console.WriteLine("Done...");
             Console.ReadLine();
         }
     }
