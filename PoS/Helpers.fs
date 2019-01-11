@@ -28,6 +28,12 @@ type Result<'t,'tErr> with
                 eprintfn "%s" msg
             edi.Throw()
             invalidOp "Throw should return 't, this line should never be hit"
+module Option =
+    let ofOk =
+        function
+        | Ok x -> Some x
+        | _ -> None
+
 module Seq =
     // return item 1, if item 2's key is different from 1, return it
     // if item 3's key is different from 2 return it
