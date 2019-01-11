@@ -3,11 +3,20 @@ namespace PathOfSupporting.StashAPI // translated from https://github.com/Imagin
 open System.Collections.Generic
 open Newtonsoft.Json.Linq
 open PathOfSupporting.Internal.Helpers
-
+type ItemProperty = {Name:string;Values:string list list;DisplayMode:int}
+type Socket = {Group:int;Attr:string;SColour:string}
 // there are more uncaptured fields, see: https://github.com/CSharpPoE/PublicStash/blob/master/PublicStash/Model/Items/Item.cs
 type Item = {
+    Id:string;
     Name:string;NamePrefix:string; TypeLine:string; TypeLinePrefix:string; Verified:bool; Identified:bool; Corrupted:bool; League:string; Icon:string
-    FrameType:string;Note:string;ILvl:int;H:int;W:int;X:int;Y:int
+    FrameType:int;Note:string;ILvl:int;H:int;W:int;X:int;Y:int;InventoryId:string;DescrText:string;SecDescrText:string
+    // is this safe? can items come through without categories? if so will it blow up the deserialization?
+    Category: Map<string,string list>
+    ExplicitMods:string list
+    Properties:ItemProperty list
+    AdditionalProperties: ItemProperty list
+    Requirements:ItemProperty list
+    Sockets: Socket list
 }
 
 type Stash = {AccountName:string;LastCharacterName:string;Id:string; Stash:string;StashType:string;Public:bool; Items:Item[]}
@@ -144,7 +153,8 @@ module Impl =
                 |> Seq.cast<JObject>
                 |> Seq.map(fun jo ->
                     let text = string jo
-                    {StashOpt=text |> SuperSerial.deserialize<Stash>;Raw=text}
+                    let result = {StashOpt=text |> SuperSerial.deserialize<Stash>;Raw=text}
+                    result
                 )
             changeId,stashContainer
         )
