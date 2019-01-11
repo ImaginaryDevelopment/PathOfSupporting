@@ -7,9 +7,9 @@ Call into it from any .net Language
 ## Major Sections:
 
 ### Skill gem info
-  * mapped from PoE's official passive gem json [TreeParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/TreeParsing.fs#L16)
+  * mapped from PoE's official passive tree page [TreeParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/TreeParsing.fs#L16)
 ### Item Parsing
-  * parses out resists and total up resistances for an item - [ItemParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/ItemParsing.fs)
+  * parses out resists and does summations on resistances for an item - [ItemParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/ItemParsing.fs)
   * sample C# consumer - [ItemParsing.cs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/SampleConsumer/Parsing/ItemParsing.cs)
   * planned: more item parsing/summations
 ### Tree Parsing
@@ -25,7 +25,7 @@ Call into it from any .net Language
 ### Character fetching
   * [HtmlParsing.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Parsing/HtmlParsing.fs)
   * fetches character names from an account name (given that the account's privacy allows character browsing)
-  
+
 
 ### Dps calculations - [Dps.fs](https://github.com/ImaginaryDevelopment/PathOfSupporting/blob/master/PoS/Dps.fs)
   * Weapon Dps Calculations - (the numbers match up with PoB) - Partially completed 
