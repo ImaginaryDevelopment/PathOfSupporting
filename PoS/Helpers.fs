@@ -34,6 +34,24 @@ module Option =
         | Ok x -> Some x
         | _ -> None
 
+module AsyncSeq =
+    open FSharp.Control
+
+    let rateLimit rateInMilliseconds (stream:AsyncSeq<_>) =
+        asyncSeq{
+            let sw  = System.Diagnostics.Stopwatch()
+            sw.Start()
+            for x in stream do
+                yield x
+                sw.Stop()
+                if sw.Elapsed.Milliseconds < rateInMilliseconds then
+                    let remainder = rateInMilliseconds - sw.Elapsed.Milliseconds
+                    // printfn "Elapsed %ims. Sleeping for %ims" sw.Elapsed.Milliseconds remainder
+                    System.Threading.Thread.Sleep remainder
+                    sw.Reset()
+                    sw.Start()
+        }
+
 module Seq =
     // return item 1, if item 2's key is different from 1, return it
     // if item 3's key is different from 2 return it
@@ -338,4 +356,67 @@ module Xml =
 
     let dumpXE titleOpt extensionOverrideOpt (xe:XElement) = dump titleOpt extensionOverrideOpt (serializeXElementPretty>>box) xe
 
+module Api =
+    open PathOfSupporting.Configuration
 
+    type RetryType=
+    | Immediate
+    | Rest of milliSeconds:int
+    type RetryBehavior =
+        // allows 0
+        | Retries of int
+        | Infinite
+
+    let fetch (target:string):Async<PoSResultDI<_>> =
+        async{
+            use client = new System.Net.Http.HttpClient()
+            try
+                let! result = client.GetStringAsync target |> Async.AwaitTask
+                return Ok result
+            with ex ->
+                return Error (target,ExceptionDispatchInfo.Capture ex)
+        }
+
+    type TryRetryArguments = {RetryType:RetryType;FailureMessage:string; Retries:RetryBehavior}
+    let rec asyncTryRetry tra f:Async<PoSResultDI<_>> =
+        async{
+            try
+                let! result = f()
+                //if debug then printfn "asyncTryRetry worked"
+                return Ok result
+            with ex ->
+                let retryOpt =
+                    match tra.Retries with
+                    | Infinite -> Some tra
+                    | Retries x when x > 0 ->
+                        Some {tra with Retries = Retries (x - 1)}
+                    | _ -> None
+                match retryOpt with
+                |Some tra ->
+                    match ex with
+                    | :? System.AggregateException as aEx ->
+                        if debug then
+                            eprintfn "Failed asyncTry, agg '%A'" aEx.InnerException
+                            match aEx.InnerExceptions with
+                            | null -> ()
+                            | items ->
+                                items
+                                |> Seq.choose Option.ofObj
+                                |> Seq.iter(fun x -> eprintfn "  exMsg:%s" x.Message)
+                            eprintfn ""
+                    | _ -> if debug then eprintfn "Failed asyncTry, trying again after %s" ex.Message
+                    match tra.RetryType with
+                    | Immediate -> ()
+                    | Rest ms ->
+                        if debug then eprintfn"rested before next try"
+                        System.Threading.Thread.Sleep(millisecondsTimeout=ms)
+                        if debug then eprintfn "Rested, retrying now"
+                    return! asyncTryRetry tra f
+                |None ->
+                    if debug then eprintfn "Ran out of retries, asyncTry fail"
+                    return Result.ExDI tra.FailureMessage ex
+        }
+    let fetchRetry tryRetryArguments (target:string) =
+        asyncTryRetry tryRetryArguments (fun () -> fetch target)
+
+    ()

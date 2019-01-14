@@ -9,11 +9,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		appveyor.yml = appveyor.yml
 		Path of Exile.PNG = Path of Exile.PNG
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleConsumer", "SampleConsumer\SampleConsumer.csproj", "{68DA0B49-8458-489E-9D00-43A75746F3D4}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PathOfSupporting.Tests", "PathOfSupporting.Tests\PathOfSupporting.Tests.fsproj", "{9B86611E-2DC5-4AC6-85D7-72F9037155A2}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "PathOfSupporting.Tests", "PathOfSupporting.Tests\PathOfSupporting.Tests.fsproj", "{9B86611E-2DC5-4AC6-85D7-72F9037155A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

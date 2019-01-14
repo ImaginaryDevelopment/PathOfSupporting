@@ -3,6 +3,7 @@ namespace CHelpers
 open System
 open System.Runtime.CompilerServices
 open PathOfSupporting.Internal.BReusable
+open FSharp.Control
 
 [<System.Runtime.CompilerServices.Extension>]
 // using a type, so we can have C# friendly overloads
@@ -45,6 +46,8 @@ type Extensions =
     static member GetValueOrDefault x = x |> Option.toNullable |> fun x -> x.GetValueOrDefault()
     [<Extension>]
     static member GetValueOrDefault (x,defaultValue) = x |> Option.toNullable |> fun x -> x.GetValueOrDefault(defaultValue)
+    [<Extension>]
+    static member ToEnumerable (x:IAsyncEnumerable<_>) = FSharp.Control.AsyncSeq.toBlockingSeq x
 
 
 
