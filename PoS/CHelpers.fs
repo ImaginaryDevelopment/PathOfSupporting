@@ -34,8 +34,8 @@ type Extensions =
     static member ProcessResult(result:PathOfSupporting.Internal.Helpers.PoSResult<_>, fOk, fError) =
         match result with
         | Ok x -> Action.invoke1 fOk x
-        | Error (m,Some ex) -> Action.invoke2 fError m ex
-        | Error (m,None) -> Action.invoke2 fError m null
+        | Error (m,Some ex) -> Action.invoke2 fError m (Some ex)
+        | Error (m,None) -> Action.invoke2 fError m None
 
     /// helper such that we don't have to create a new List just to make it a more familiar to C# consumers
     [<Extension>]

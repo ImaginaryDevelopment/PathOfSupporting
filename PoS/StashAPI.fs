@@ -71,7 +71,7 @@ module Impl =
         let target = match targeting.StartingChangeIdOpt with | NonValueString _ -> target | ValueString x -> sprintf "%s?id=%s" target x
         target
 
-    let fetchOne (targeting:FetchArguments) fMap:Async<PoSResultDI<_> * FetchArguments> =
+    let fetchOne (targeting:FetchArguments) fMap:Async<PoSResult<_> * FetchArguments> =
         let target = targeting.TargetUrlOverrideOpt |> Option.ofValueString |> Option.defaultValue stashTabApiUrl
         let target = match targeting.StartingChangeIdOpt with | NonValueString _ -> target | ValueString x -> sprintf "%s?id=%s" target x
         async{
@@ -80,8 +80,10 @@ module Impl =
                 try
                     let (item,nextKey) = fMap raw
                     return Ok <| (targeting.StartingChangeIdOpt,item), {targeting with StartingChangeIdOpt = nextKey}
-                with ex -> return Error (target,ExceptionDispatchInfo.Capture ex), targeting
-            | Error x -> return Error x, targeting
+                with ex ->
+                    let posR = Result.ExDI target ex
+                    return (posR, targeting)
+            | Error x -> return (Error x, targeting)
         }
 
     let fetch (targeting:FetchArguments) fMap = // : Async<FetchResult<_>> =
@@ -95,7 +97,7 @@ module Impl =
     [<NoComparison>]
     type FetchDebugResult = {StashOpt:PoSResult<Stash>;Raw:string}
     let deserializeStash = SuperSerial.deserialize<Stash>
-    let fetchStashes args:AsyncSeq<PoSResultDI<_>>=
+    let fetchStashes args:AsyncSeq<PoSResult<_>>=
         let rawResult =
             fetch args
                 // was used to have a key to cache results

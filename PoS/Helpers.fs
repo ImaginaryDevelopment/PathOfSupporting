@@ -4,30 +4,30 @@ open System.Collections.Generic
 open System.Linq
 open System.Runtime.ExceptionServices
 
-// type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
-///string * exn option
-type PoSError = string * exn option
-type PoSRethrowable = string*ExceptionDispatchInfo
+[<NoComparison>]
+type PoSException =
+    |Exception of exn
+    |Rethrowable of ExceptionDispatchInfo
+    with
+        // for C# consumption
+        member x.UnwrapException =
+            match x with
+            | Exception e -> e
+            | Rethrowable r -> r.SourceException
+
+type PoSError = string * PoSException option
 // type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
 /// Result<'t,PoSError>
 type PoSResult<'t> = Result<'t,PoSError>
-type PoSResultDI<'t> = Result<'t,PoSRethrowable>
 
 let errMsg msg :PoSResult<'t> = Result.Error(msg,None)
-let errMsgEx msg (ex:exn) :PoSResult<'t> = Result.Error(msg,Some ex)
+let errMsgEx msg (ex:exn) :PoSResult<'t> = Result.Error(msg,Some (Exception ex))
 // could name the extensions Error (but then... what is that helping?
 type Result<'t,'tErr> with
     static member ErrMsg msg = errMsg msg
     static member Ex msg ex = errMsgEx msg ex
-    static member ExDI msg ex = Result.Error(msg,ExceptionDispatchInfo.Capture ex)
-    static member GetOrRethrow (posr:PoSResultDI<_>) =
-        match posr with
-        | Ok x -> x
-        | Error(msg,edi) ->
-            if PathOfSupporting.Configuration.debug then
-                eprintfn "%s" msg
-            edi.Throw()
-            invalidOp "Throw should return 't, this line should never be hit"
+    static member ExDI msg ex :PoSResult<_> = Result.Error(msg,Some <| Rethrowable (ExceptionDispatchInfo.Capture ex))
+
 module Option =
     let ofOk =
         function
@@ -383,56 +383,12 @@ module Api =
         | Retries of int
         | Infinite
 
-    let fetch (target:string):Async<PoSResultDI<_>> =
+    let fetch (target:string):Async<PoSResult<_>> =
         async{
             use client = new System.Net.Http.HttpClient()
             try
                 let! result = client.GetStringAsync target |> Async.AwaitTask
                 return Ok result
             with ex ->
-                return Error (target,ExceptionDispatchInfo.Capture ex)
+                return Error (target,Some <| Rethrowable( ExceptionDispatchInfo.Capture ex))
         }
-
-    type TryRetryArguments = {RetryType:RetryType;FailureMessage:string; Retries:RetryBehavior}
-    let rec asyncTryRetry tra f:Async<PoSResultDI<_>> =
-        async{
-            try
-                let! result = f()
-                //if debug then printfn "asyncTryRetry worked"
-                return Ok result
-            with ex ->
-                let retryOpt =
-                    match tra.Retries with
-                    | Infinite -> Some tra
-                    | Retries x when x > 0 ->
-                        Some {tra with Retries = Retries (x - 1)}
-                    | _ -> None
-                match retryOpt with
-                |Some tra ->
-                    match ex with
-                    | :? System.AggregateException as aEx ->
-                        if debug then
-                            eprintfn "Failed asyncTry, agg '%A'" aEx.InnerException
-                            match aEx.InnerExceptions with
-                            | null -> ()
-                            | items ->
-                                items
-                                |> Seq.choose Option.ofObj
-                                |> Seq.iter(fun x -> eprintfn "  exMsg:%s" x.Message)
-                            eprintfn ""
-                    | _ -> if debug then eprintfn "Failed asyncTry, trying again after %s" ex.Message
-                    match tra.RetryType with
-                    | Immediate -> ()
-                    | Rest ms ->
-                        if debug then eprintfn"rested before next try"
-                        System.Threading.Thread.Sleep(millisecondsTimeout=ms)
-                        if debug then eprintfn "Rested, retrying now"
-                    return! asyncTryRetry tra f
-                |None ->
-                    if debug then eprintfn "Ran out of retries, asyncTry fail"
-                    return Result.ExDI tra.FailureMessage ex
-        }
-    let fetchRetry tryRetryArguments (target:string) =
-        asyncTryRetry tryRetryArguments (fun () -> fetch target)
-
-    ()

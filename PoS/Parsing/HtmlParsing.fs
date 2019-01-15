@@ -122,10 +122,14 @@ module PoeDb =
                     | None -> Error (sprintf "Could not determine target from %A" targeting,None)
 
             let fetch targeting =
-                makeTarget targeting
-                |> Result.map(fun x ->
-                    Api.fetch x
-                )
+                async{
+                    match makeTarget targeting with
+                    | Error e ->
+                        return Error e
+                    |Ok t ->
+                        let! result = Api.fetch t
+                        return result
+                }
             let parse x =
                 let hd = HtmlDocument()
                 hd.LoadHtml x
@@ -242,14 +246,14 @@ module PoeDb =
         open Impl.Munge
         /// cn is like Amulet,Claw,
         let parseModPhp targeting =
-            Impl.fetch targeting
-            |> Result.map (
-                Async.map (
-                    Result.map(
-                        Impl.parse
-                        >> mungeDoc
-                        >> List.ofSeq
-                        >> List.map (mungeModCategory >> fun x -> {Item = x.Item;Children = x.Children |> Impl.mapAffixChildren})
-                    )
-                )
-            )
+            async{
+                match! Impl.fetch targeting with
+                | Error e -> return Error e
+                | Ok fetched ->
+                    return
+                        Impl.parse fetched
+                        |> mungeDoc
+                        |> List.ofSeq
+                        |> List.map (mungeModCategory >> fun x -> {Item = x.Item;Children = x.Children |> Impl.mapAffixChildren})
+                        |> Ok
+            }
