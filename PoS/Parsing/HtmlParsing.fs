@@ -1,4 +1,4 @@
-﻿module PathOfSupporting.HtmlParsing
+﻿module PathOfSupporting.Parsing.Html
 open System.Net.Http
 open System.Collections.Generic
 open PathOfSupporting.Internal.Helpers
@@ -97,6 +97,7 @@ module PathOfExile =
                         return GetResult.FailedDeserialize x
                 else return GetResult.FailedHttp <| sprintf "Fail:%A" resp.StatusCode
             }
+
 module PoeDb =
     module Tw=
         type ModPageInfo ={cn:string;an:string}
