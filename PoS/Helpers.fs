@@ -98,18 +98,6 @@ module Seq =
                     sw.Reset()
                     sw.Start()
         }
-    let unflatten fIsHeader fHeader fChild =
-        Seq.fold(fun grouped next ->
-            if fIsHeader next then
-                (fHeader next,[]) :: grouped
-            else
-                match grouped with
-                | (heading,children) :: tail ->
-                    (heading, fChild next :: children) :: tail
-                | _ -> failwith "no head found"
-        ) []
-        >> List.map(fun (x,y) -> x, List.rev y)
-        >> List.rev
 
 module Reflection =
     open BReusable

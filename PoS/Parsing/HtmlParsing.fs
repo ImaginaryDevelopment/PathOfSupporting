@@ -225,11 +225,11 @@ module PoeDb =
                             // generic rolled
                             | tier::name::ParseInt ilvl::fullDisplay::chance::[] ->Some {Tier=tier;Meta=name;ILvl=ilvl;DisplayHtml=fullDisplay;Chance=chance}
                             | bad::_ ->
-                                if Configuration.debug then
+                                if PathOfSupporting.Configuration.debug then
                                     eprintfn "you have a bad child %s, %A" bad l
                                 None
                             | [] ->
-                                if Configuration.debug then
+                                if PathOfSupporting.Configuration.debug then
                                     eprintfn "you have a really bad child %A" l
                                 None
                         )
