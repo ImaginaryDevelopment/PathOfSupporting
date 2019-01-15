@@ -53,6 +53,11 @@ module AsyncSeq =
         }
 
 module Seq =
+    let tryTail items =
+        items
+        |> Seq.mapi(fun i x -> if i = 0 then None else Some x)
+        |> Seq.choose id
+
     // return item 1, if item 2's key is different from 1, return it
     // if item 3's key is different from 2 return it
     // and so on
@@ -80,6 +85,18 @@ module Seq =
                     sw.Reset()
                     sw.Start()
         }
+    let unflatten fIsHeader fHeader fChild =
+        Seq.fold(fun grouped next ->
+            if fIsHeader next then
+                (fHeader next,[]) :: grouped
+            else
+                match grouped with
+                | (heading,children) :: tail ->
+                    (heading, fChild next :: children) :: tail
+                | _ -> failwith "no head found"
+        ) []
+        >> List.map(fun (x,y) -> x, List.rev y)
+        >> List.rev
 
 module Reflection =
     open BReusable
@@ -218,7 +235,6 @@ module SuperSerial =
 
 
 module Storage =
-    open System
     open System.IO
     open SuperSerial
 
