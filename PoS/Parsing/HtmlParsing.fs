@@ -17,6 +17,7 @@ module Impl =
             static member internal getValue (w:Wrap):HtmlNode option = w.Value
             member x.ToDump() = x.Value |> Option.map(fun x -> x.OuterHtml)
     module Html =
+        let (>&>) f1 f2 x = f1 x && f2 x
         open System
         open PathOfSupporting.Internal.BReusable.StringHelpers
 
@@ -110,7 +111,6 @@ module PoeDb =
             open PathOfSupporting.Internal.BReusable.StringHelpers
 
 
-            let (>&>) f1 f2 x = f1 x && f2 x
 
             let makeTarget ({cn=cn;an=an} as targeting):PoSResult<_> =
                 match cn, an with
@@ -136,11 +136,19 @@ module PoeDb =
                 hd.LoadHtml x
                 hd
             module Munge =
+                open Impl.Html
                 let mungeDoc (hd:HtmlDocument) =
-                    hd.DocumentNode
-                    |> wrap
-                    |> selectNodes "//div/h4"
-                    |> Seq.filter(hasId >&> hasChildWith (isNodeType HtmlNodeType.Text >> not))
+                    let wrapped =
+                        hd.DocumentNode
+                        |> wrap
+                    let nodes =
+                        wrapped
+                        |> selectNodes "//div/h4"
+                        |> Seq.filter(hasId >> not >&> hasChildWith (isNodeType HtmlNodeType.Text >> not))
+                        |> List.ofSeq
+                    match nodes with
+                    | [] -> Result.ErrMsg <| sprintf "could not find h4 in %A" (getOuterHtml wrapped)
+                    | x -> Ok x
 
                 type ItemAffixContainer<'t> = {Item:string;Children:'t list} with
                     static member mapChildren f (x:ItemAffixContainer<_>) = {Item=x.Item;Children=List.map f x.Children}
@@ -195,7 +203,7 @@ module PoeDb =
                         let detailBody = detailTable |> selectNodes ".//tbody/tr"
                         {Display=affixName;FossilCategories=fossilCategories;Children= List.ofSeq detailBody}
                         |> Ok
-                        
+
                 // repair the elder and shaper things not having a prefix/suffix attached to the names
                 let fixUpEffixCategories x =
                         x
@@ -247,6 +255,22 @@ module PoeDb =
         open Impl.Munge
         /// cn is like Amulet,Claw,
         let parseModPhp targeting =
+            let discardFailures (x:Result<Impl.Munge.AffixTierContainer<_>,_> list) =
+                List.choose Result.TryGetValue x
+
+            let reWorkMungeModCategory (iac:ItemAffixContainer<Impl.Wrap>) =
+                {   Item=iac.Item
+                    Children=
+                        let childStuff =
+                            iac.Children
+                            |> Impl.mapAffixChildren
+                        childStuff
+                        |> List.map(fun x ->
+                            {EffixType=x.EffixType;Children = discardFailures x.Children
+                            }
+                        )
+                }
+
             async{
                 match! Impl.fetch targeting with
                 | Error e -> return Error e
@@ -254,7 +278,8 @@ module PoeDb =
                     return
                         Impl.parse fetched
                         |> mungeDoc
-                        |> List.ofSeq
-                        |> List.map (mungeModCategory >> fun x -> {Item = x.Item;Children = x.Children |> Impl.mapAffixChildren})
-                        |> Ok
+                        |> Result.map List.ofSeq
+                        |> Result.map (List.map (
+                                        mungeModCategory >> reWorkMungeModCategory
+                        ))
             }

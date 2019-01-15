@@ -27,6 +27,7 @@ type Result<'t,'tErr> with
     static member ErrMsg msg = errMsg msg
     static member Ex msg ex = errMsgEx msg ex
     static member ExDI msg ex :PoSResult<_> = Result.Error(msg,Some <| Rethrowable (ExceptionDispatchInfo.Capture ex))
+    static member TryGetValue x = match x with | Ok x -> Some x | _ -> None
 
 module Option =
     let ofOk =
