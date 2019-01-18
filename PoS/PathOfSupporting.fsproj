@@ -20,6 +20,7 @@
     <Compile Include="Classes.fs" />
     <Compile Include="StashAPI.fs" />
     <Compile Include="LadderAPI.fs" />
+    <Compile Include="Parsing\FsHtml.fs" />
     <Compile Include="Parsing\ItemParsing.fs" />
     <Compile Include="Parsing\TreeParsing.fs" />
     <Compile Include="Parsing\PoBParsing.fs" />

@@ -1,4 +1,4 @@
-﻿module PathOfSupporting.Parsing.Html
+module PathOfSupporting.Parsing.Html
 open System.Net.Http
 open System.Collections.Generic
 open PathOfSupporting.Internal.Helpers
@@ -47,8 +47,8 @@ module Impl =
         let getAttrValueOrNull name =
             getAttrValue name
             >> Option.defaultValue null
-        let getInnerText = Wrap.getValue >> Option.map (fun x -> x.InnerText)
-        let getInnerHtml = Wrap.getValue >> Option.map(fun x -> x.InnerHtml)
+        let getInnerText = mapNull (fun x -> x.InnerText)
+        let getInnerHtml = mapNull (fun x -> x.InnerHtml)
         let getFirstChild = mapNode (fun x -> x.FirstChild)
         let getOuterHtml = mapNull(fun x -> x.OuterHtml)
         let getParentNode = mapNode(fun x -> x.ParentNode)
@@ -129,6 +129,12 @@ module PoeDb =
                         return Error e
                     |Ok t ->
                         let! result = Api.fetch t
+                        if PathOfSupporting.Configuration.debug then
+                            match result with
+                            | Ok _ ->
+                                printfn "Fetched %s" t
+                            | Error e ->
+                                eprintfn "Failed Fetch of %s" t
                         return result
                 }
             let parse x =
@@ -150,15 +156,16 @@ module PoeDb =
                     | [] -> Result.ErrMsg <| sprintf "could not find h4 in %A" (getOuterHtml wrapped)
                     | x -> Ok x
 
-                type ItemAffixContainer<'t> = {Item:string;Children:'t list} with
-                    static member mapChildren f (x:ItemAffixContainer<_>) = {Item=x.Item;Children=List.map f x.Children}
-                    static member chooseChildren f (x:ItemAffixContainer<_>) = {Item=x.Item; Children = List.choose f x.Children}
+                type ItemAffixContainer<'t> = {ItemType:string;Children:'t list} with
+                    static member mapChildren f (x:ItemAffixContainer<_>) = {ItemType=x.ItemType;Children=List.map f x.Children}
+                    static member chooseChildren f (x:ItemAffixContainer<_>) = {ItemType=x.ItemType; Children = List.choose f x.Children}
+                    member x.ToDump() = sprintf "%A" x
                 // headerNode is (H4 Amulets... but should be Prefix;Suffix;...)
                 let mungeModCategory headerNode =
                 //    headerNode.Dump("header")
-                    let category = getInnerText headerNode |> Option.defaultValue null |> trim
+                    let category = getInnerText headerNode |> trim
                     printfn "munging %s" category
-                    {Item=category;Children=getFollowingSiblings headerNode |> List.ofSeq}
+                    {ItemType=category;Children=getFollowingSiblings headerNode |> List.ofSeq}
                 type AffixContainer<'t> = {EffixType:string;Children:'t list}
                 module AffixContainer =
                     let mapChildren f x = {EffixType=x.EffixType;Children=f x.Children}
@@ -167,7 +174,7 @@ module PoeDb =
                     let mapRaw f x = unwrap x |> f |> wrap
 
                 let mungeAffix titleNode =
-                    match titleNode |> selectNodes "h4" |> Seq.tryHead |> Option.bind getInnerText with
+                    match titleNode |> selectNode "h4" |> getInnerText |> Option.ofValueString with
                     | None -> None
                     // an affix or suffix
                     | Some effixType ->
@@ -176,7 +183,7 @@ module PoeDb =
                             |> getChildNodes
                             |> Seq.skipWhile (isNodeType HtmlNodeType.Element>>not)
                             |> Seq.tryTail
-                            |> Seq.filter (getInnerText >> Option.defaultValue null >>String.IsNullOrWhiteSpace>>not)
+                            |> Seq.filter (getInnerText>>String.IsNullOrWhiteSpace>>not)
                             |> Seq.pairwise
                             |> Seq.filter(fst>>hasClass "mod-title")
                             |> List.ofSeq
@@ -195,7 +202,7 @@ module PoeDb =
                         Result.Error "expected accordion id to equal collapseOne id"
                       else
                         let fossilCategories =
-                                subCatNode |> selectNodes(".//*[contains(@class,'badge')]") |> Seq.choose getInnerText |> List.ofSeq
+                                subCatNode |> selectNodes(".//*[contains(@class,'badge')]") |> Seq.choose (getInnerText>>Option.ofValueString) |> List.ofSeq
                         let affixName = subCatNode|> getChildNodes |> Seq.skipWhile(hasText >> not) |> Seq.tryTail |> collectHtml
                         let detailTable = detailNode |> selectNode ".//table"
                 //    let detailHead = detailTable |> selectNodes ".//thead/tr" |> Seq.tryHead |> wrapOpt
@@ -219,26 +226,32 @@ module PoeDb =
                 type TieredAffix={Tier:string;Meta:string;ILvl:int;DisplayHtml:string;Chance:string}
                 type MungedAffix={Display:string;FossilMods:string list;Tiers:TieredAffix list}
 
+                let (|OuterHtml|_|) = getOuterHtml >> Option.ofValueString
+                let (|InnerHtml|_|) = getInnerHtml >> Option.ofValueString
                 let mungeDetails (x:AffixTierContainer<_>) =
                     let children=
                         x.Children
                         |> List.map (selectNodes "td" >> List.ofSeq)
-                        |> List.map(List.map (getInnerHtml >> Option.defaultValue null))
+                        //|> List.map(List.map (getInnerHtml >> Option.defaultValue null))
                         |> List.choose (fun l ->
                             match l with
                             // shaper/vaal/elder
-                            | ParseInt ilvl::fullDisplay::[] -> Some {Tier=null;Meta=null;ILvl=ilvl;DisplayHtml=fullDisplay;Chance=null}
+                            | InnerHtml(ParseInt ilvl)::fullDisplay::[] -> Some {Tier=null;Meta=null;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=null}
                             // delve/essence/masters
-                            | meta::ParseInt ilvl::fullDisplay::[] -> Some {Tier=null;Meta=meta;ILvl=ilvl;DisplayHtml=fullDisplay;Chance=null}
+                            | meta::InnerHtml(ParseInt ilvl)::fullDisplay::[] -> Some {Tier=null;Meta=getInnerHtml meta;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=null}
                             // generic rolled
-                            | tier::name::ParseInt ilvl::fullDisplay::chance::[] ->Some {Tier=tier;Meta=name;ILvl=ilvl;DisplayHtml=fullDisplay;Chance=chance}
-                            | bad::_ ->
+                            | tier::name::InnerHtml(ParseInt ilvl)::fullDisplay::chance::[] ->Some {Tier=getInnerHtml tier;Meta=getInnerHtml name;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=getInnerHtml chance}
+                            | InnerHtml bad::_ ->
                                 if PathOfSupporting.Configuration.debug then
                                     eprintfn "you have a bad child %s, %A" bad l
                                 None
                             | [] ->
                                 if PathOfSupporting.Configuration.debug then
                                     eprintfn "you have a really bad child %A" l
+                                None
+                            | x ->
+                                if PathOfSupporting.Configuration.debug then
+                                    eprintfn "idk what is going on %A" x
                                 None
                         )
                     {Display=x.Display;FossilCategories=x.FossilCategories;Children=children}
@@ -259,7 +272,7 @@ module PoeDb =
                 List.choose Result.TryGetValue x
 
             let reWorkMungeModCategory (iac:ItemAffixContainer<Impl.Wrap>) =
-                {   Item=iac.Item
+                {   ItemType=iac.ItemType
                     Children=
                         let childStuff =
                             iac.Children
