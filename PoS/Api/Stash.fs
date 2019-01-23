@@ -26,36 +26,6 @@ type Stash = {AccountName:string;LastCharacterName:string;Id:string; Stash:strin
 type ChangeSet = {ChangeId:string;Stashes:Stash list}
 type FetchArguments = {TargetUrlOverrideOpt:string;StartingChangeIdOpt:string}
 
-//[<NoComparison;NoEquality>]
-//type FetchResult<'t> = {ItemOpt:PoSResultDI<'t>; Next:Async<FetchResult<'t>>} with
-//    static member map f (x:FetchResult<'t>):FetchResult<'tMapped> =
-//        {ItemOpt = Result.map f x.ItemOpt; Next=x.Next |> Async.map (FetchResult.map f)}
-//    static member toSeq (next:FetchResult<'t>):seq<FetchResult<'t>>=
-//        // I'm so grateful for my x
-//        let rec thankYou x =
-//            seq {
-//                yield x
-//                yield! Async.RunSynchronously x.Next |> thankYou
-//            }
-//        thankYou next
-//    member x.ThankYou :seq<FetchResult<'t>>=
-//        let rec gratefulForMy x =
-//            let thankYouNext =
-//                x.Next |> Async.map(fun x -> gratefulForMy x)
-//                }
-//            seq {
-//                yield x
-//                yield! Async.RunSynchronously x.Next |> gratefulForMy
-//            }
-//        gratefulForMy x
-//    static member changes (x:FetchResult<'t*string>):FetchResult<'t> =
-//        let mutable lastChange = x.ItemOpt |> Option.ofOk |> Option.map snd
-//        let result=
-//            (x,lastChange) |> Seq.unfold(fun state ->
-//                Unchecked.defaultof<_>
-//            )
-//        result
-
 module Impl =
     open PathOfSupporting
     open PathOfSupporting.Internal.BReusable.StringPatterns

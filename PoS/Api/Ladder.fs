@@ -39,12 +39,12 @@ module Impl =
         | WithDetails fd -> generateUri fd
 
     let fetch uri =
-            Api.fetch uri
-            |> Async.map(Result.bind(fun raw ->
-                    match SuperSerial.deserialize<LadderResponse> raw with
-                    | Ok nr -> Ok (nr,raw)
-                    | Error e -> Result.ErrAdd "raw" raw e |> Error
-            ))
+        Api.fetch uri
+        |> Async.map(Result.bind(fun raw ->
+                match SuperSerial.deserialize<LadderResponse> raw with
+                | Ok nr -> Ok (nr,raw)
+                | Error e -> Result.ErrAdd "raw" raw e |> Error
+        ))
     let enumerateLadder targeting =
         Some targeting
         |> AsyncSeq.unfoldAsync(fun targeting ->

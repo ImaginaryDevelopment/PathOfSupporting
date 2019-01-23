@@ -55,11 +55,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LadderAPI.cs" />
+    <Compile Include="Api\LadderAPI.cs" />
+    <Compile Include="Api\CharacterAPI.cs" />
     <Compile Include="Parsing\HtmlParsing.cs" />
     <Compile Include="Parsing\ItemParsing.cs" />
-    <Compile Include="NinjaAPI.cs" />
-    <Compile Include="StashAPI.cs" />
+    <Compile Include="Api\NinjaAPI.cs" />
+    <Compile Include="Api\StashAPI.cs" />
     <Compile Include="Parsing\TreeParsing.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

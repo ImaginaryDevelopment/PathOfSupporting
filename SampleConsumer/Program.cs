@@ -10,8 +10,9 @@ namespace SampleConsumer
     {
         static void Main(string[] args)
         {
-            Parsing.HtmlParsing.GetCharacters();
+            Api.CharacterAPI.GetCharacterPassives().GetAwaiter().GetResult();
             Console.ReadLine();
+
             ItemParsing.ParseItem();
             Parsing.TreeParsing.Gems.GetSkillGem();
             Parsing.TreeParsing.Gems.GetSkillGems();
@@ -26,6 +27,7 @@ namespace SampleConsumer
             NinjaAPI.FetchCurrency();
             NinjaAPI.FetchDebug().GetAwaiter().GetResult();
             LadderAPI.GetLadder().GetAwaiter().GetResult();
+            Parsing.HtmlParsing.GetCharacters();
 
             Console.WriteLine();
             Console.WriteLine("Done...");
