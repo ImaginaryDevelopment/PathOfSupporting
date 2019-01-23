@@ -8,7 +8,7 @@ using CHelpers;
 using Microsoft.FSharp.Control;
 using Microsoft.FSharp.Core;
 
-using PathOfSupporting.LadderAPI;
+using PathOfSupporting.Api.Ladder;
 
 namespace SampleConsumer
 {

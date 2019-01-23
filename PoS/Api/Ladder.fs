@@ -1,4 +1,4 @@
-﻿namespace  PathOfSupporting.LadderAPI // consider using the helper map for the official api: https://app.swaggerhub.com/apis/Chuanhsing/poe/1.0.0
+﻿namespace  PathOfSupporting.Api.Ladder // consider using the helper map for the official api: https://app.swaggerhub.com/apis/Chuanhsing/poe/1.0.0
 
 open PathOfSupporting.Internal.BReusable.StringPatterns
 open PathOfSupporting.Internal.Helpers

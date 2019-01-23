@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using CHelpers;
 
-using PathOfSupporting.StashAPI;
+using PathOfSupporting.Api.Stash;
 
 namespace SampleConsumer
 {

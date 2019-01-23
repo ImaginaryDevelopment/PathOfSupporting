@@ -20,9 +20,9 @@
     <Compile Include="Helpers.fs" />
     <Compile Include="Schema.fs" />
     <Compile Include="Classes.fs" />
-    <Compile Include="StashAPI.fs" />
-    <Compile Include="LadderAPI.fs" />
-    <Compile Include="NinjaAPI.fs" />
+    <Compile Include="Api\Stash.fs" />
+    <Compile Include="Api\Ladder.fs" />
+    <Compile Include="Api\PoENinja.fs" />
     <Compile Include="Parsing\FsHtml.fs" />
     <Compile Include="Parsing\ItemParsing.fs" />
     <Compile Include="Parsing\TreeParsing.fs" />

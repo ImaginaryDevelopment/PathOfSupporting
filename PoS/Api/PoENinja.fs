@@ -1,4 +1,4 @@
-﻿namespace PathOfSupporting.NinjaAPI
+﻿namespace PathOfSupporting.Api.Ninja
 
 open PathOfSupporting.Internal.Helpers
 

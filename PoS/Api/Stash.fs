@@ -1,4 +1,4 @@
-namespace PathOfSupporting.StashAPI // translated from https://github.com/ImaginaryDevelopment/LinqPad/blob/master/LINQPad%20Queries/gamey/PoE%20stash%20tab%20api.linq
+namespace PathOfSupporting.Api.Stash // translated from https://github.com/ImaginaryDevelopment/LinqPad/blob/master/LINQPad%20Queries/gamey/PoE%20stash%20tab%20api.linq
 open FSharp.Control
 
 open System.Collections.Generic
