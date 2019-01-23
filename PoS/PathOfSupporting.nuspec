@@ -6,7 +6,7 @@
 
         <!-- The package version number that is used when resolving dependencies -->
         <!-- https://stackoverflow.com/questions/10590978/how-to-publish-nuget-prerelease-version-package -->
-        <version>0.0.18-beta1</version>
+        <version>0.0.19</version>
 
         <!-- Authors contain text that appears directly on the gallery -->
         <authors>Brandon D'Imperio</authors>
