@@ -99,7 +99,7 @@ module Resistances =
             |> foldTotal
             |> List.map(fun (x,y) -> {Resistance=x;Value=y})
             |> Ok
-        | txt -> errMsg "Could not match"
+        | txt -> errMsg <| sprintf "Could not match against %s" txt
 
 
 

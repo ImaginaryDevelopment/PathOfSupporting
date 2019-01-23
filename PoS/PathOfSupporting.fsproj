@@ -9,6 +9,8 @@
     <WarningLevel>5</WarningLevel>
     <DefineConstants>TRACE;DEBUG;NETSTANDARD</DefineConstants>
     <OutputPath>lib\</OutputPath>
+    <WarningsAsErrors />
+    <OtherFlags>--warnon:1182 --nowarn:0052 --warnaserror-:0052,0044</OtherFlags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +22,7 @@
     <Compile Include="Classes.fs" />
     <Compile Include="StashAPI.fs" />
     <Compile Include="LadderAPI.fs" />
+    <Compile Include="NinjaAPI.fs" />
     <Compile Include="Parsing\FsHtml.fs" />
     <Compile Include="Parsing\ItemParsing.fs" />
     <Compile Include="Parsing\TreeParsing.fs" />

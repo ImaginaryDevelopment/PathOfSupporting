@@ -8,12 +8,34 @@ open System.Runtime.ExceptionServices
 type PoSException =
     |Exception of exn
     |Rethrowable of ExceptionDispatchInfo
+    |RelevantData of Map<string,obj>
     with
         // for C# consumption
         member x.UnwrapException =
             match x with
             | Exception e -> e
             | Rethrowable r -> r.SourceException
+            | RelevantData m ->
+                let ex = System.Exception("UnknownException:Any Relevant information in this.Data")
+                m
+                |> Map.iter(fun k v ->
+                    ex.Data.Add(k,v)
+                )
+                ex
+        static member AddData (key:string) (value:obj) =
+            function
+        //match exOpt with
+        //| None -> RelevantData (Map[key,value])
+            |  Exception ex->
+                ex.Data.Add(key,value)
+                Exception ex
+            | Rethrowable edi ->
+                edi.SourceException.Data.Add(key,value)
+                Rethrowable edi
+            |  RelevantData m ->
+                m.Add(key,value)
+                |> RelevantData
+
 
 type PoSError = string * PoSException option
 // type alias definitions aren't perpetuated into tooltips, so the below doc comment helps
@@ -24,10 +46,16 @@ let errMsg msg :PoSResult<'t> = Result.Error(msg,None)
 let errMsgEx msg (ex:exn) :PoSResult<'t> = Result.Error(msg,Some (Exception ex))
 // could name the extensions Error (but then... what is that helping?
 type Result<'t,'tErr> with
+    static member TryGetValue x = match x with | Ok x -> Some x | _ -> None
     static member ErrMsg msg = errMsg msg
     static member Ex msg ex = errMsgEx msg ex
     static member ExDI msg ex :PoSResult<_> = Result.Error(msg,Some <| Rethrowable (ExceptionDispatchInfo.Capture ex))
-    static member TryGetValue x = match x with | Ok x -> Some x | _ -> None
+    static member ErrAdd key value ((msg,x):PoSError) :PoSError =
+        let x =
+            x
+            |> Option.map (PoSException.AddData key value)
+            |> Option.defaultValue (RelevantData <| Map[key,value])
+        (msg,Some x)
 
 module Option =
     let ofOk =
@@ -394,3 +422,38 @@ module Api =
             with ex ->
                 return Error (target,Some <| Rethrowable( ExceptionDispatchInfo.Capture ex))
         }
+
+[<RequireQualifiedAccess>]
+module Json =
+    open Newtonsoft.Json.Linq
+
+    [<NoComparison>]
+    type Wrap<'t when 't :> JToken and 't : null >  = private {node:'t}
+        with
+    //            static member Wrap n = {node=n}
+            member x.Value:'t option= Option.ofObj x.node
+            static member internal getValue (w:Wrap<_>):'t option = w.Value
+            member x.ToDump() = x.Value |> Option.map(fun x -> x.ToString())
+    // parent is RequireQualified, allow opening for symbol usage
+    module Symbols =
+        let (>&>) f1 f2 x = f1 x && f2 x
+
+    open Symbols
+
+    let wrap x = {node=x}
+    let wrapOpt x = Option.defaultValue {node=null} x
+    let map f =
+        Wrap.getValue
+        >> Option.map f
+    let mapOrDefault f =
+        Wrap.getValue
+        >> Option.map (f>>wrap)
+        >> Option.defaultValue {node=null}
+    let mapOrNull f =
+        Wrap.getValue
+        >> Option.map f
+        >> Option.defaultValue null
+    let bind f =
+        Wrap.getValue
+        >> Option.bind f
+    

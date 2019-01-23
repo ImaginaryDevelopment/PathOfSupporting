@@ -111,7 +111,7 @@ module Hits =
                 {Min= x.Min*eff+add.Min * eff;Max=x.Max*eff+add.Max*eff}
     let getWeaponHit (adds:AddMap) (sk:Skill) (modifications:ModMap) (w:Weapon) =
         w.Damage
-        |> Map.map (fun dt wdr ->
+        |> Map.map (fun dt _wdr ->
             let moar = modifications |> getMods dt |> Seq.choose (function |More,x -> Some x | _ -> None) |> Seq.map (fun x -> x / 100m) |> foldMore
             let inc = modifications |> getMods dt |> Seq.choose(function |Increase,x -> Some (Some dt,x) | _ -> None) |> foldDmgType dt
             let add = adds |> getDamageType dt

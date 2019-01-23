@@ -5,7 +5,6 @@ open PathOfSupporting.Internal.Helpers
 
 type Character = {Name:string;League:string; Class:string;Level:int}
 [<RequireQualifiedAccess>]
-[<NoComparison>]
 module Impl =
     open HtmlAgilityPack
 
@@ -133,8 +132,8 @@ module PoeDb =
                             match result with
                             | Ok _ ->
                                 printfn "Fetched %s" t
-                            | Error e ->
-                                eprintfn "Failed Fetch of %s" t
+                            | Error (msg,_) ->
+                                eprintfn "Failed Fetch of %s,%s" t msg
                         return result
                 }
             let parse x =
