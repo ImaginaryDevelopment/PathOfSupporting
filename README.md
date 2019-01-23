@@ -4,6 +4,10 @@ Call into it from any .net Language
 
 [![Build status](https://ci.appveyor.com/api/projects/status/85y72cy90rs59wkv?svg=true)](https://ci.appveyor.com/project/ImaginaryDevelopment/pathofsupporting)
 
+### Installation 
+ * NuGet - https://www.nuget.org/packages/PathOfSupporting/
+ * Source - https://github.com/ImaginaryDevelopment/PathOfSupporting
+ 
 ## Major Sections:
 
 ### Skill gem info
@@ -32,9 +36,7 @@ Call into it from any .net Language
   
   
 
-Installation 
- * NuGet - https://www.nuget.org/packages/PathOfSupporting/
- * Source - https://github.com/ImaginaryDevelopment/PathOfSupporting
+
  
   
  
