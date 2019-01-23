@@ -21,6 +21,10 @@ namespace SampleConsumer
             StashAPI.FetchOne();
             StashAPI.FetchLeagueStashes();
             StashAPI.FetchLeagueChangeSets();
+            NinjaAPI.FetchCurrency();
+            var ninjaTask = NinjaAPI.FetchDebug();
+            ninjaTask.GetAwaiter().GetResult();
+
             Console.WriteLine();
             Console.WriteLine("Done...");
             Console.ReadLine();

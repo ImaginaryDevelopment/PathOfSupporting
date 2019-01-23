@@ -404,6 +404,7 @@ module Xml =
 
 module Api =
     open PathOfSupporting.Configuration
+    open PathOfSupporting.Internal.BReusable
 
     type RetryType=
     | Immediate
@@ -414,14 +415,21 @@ module Api =
         | Infinite
 
     let fetch (target:string):Async<PoSResult<_>> =
-        async{
-            use client = new System.Net.Http.HttpClient()
-            try
-                let! result = client.GetStringAsync target |> Async.AwaitTask
-                return Ok result
-            with ex ->
-                return Error (target,Some <| Rethrowable( ExceptionDispatchInfo.Capture ex))
-        }
+        match target with
+        | ValueString _ ->
+            async{
+                use client = new System.Net.Http.HttpClient()
+                try
+                    let! result = client.GetStringAsync target |> Async.AwaitTask
+                    return Ok result
+                with ex ->
+
+                    return Error (target,Some <| Rethrowable( ExceptionDispatchInfo.Capture ex))
+            }
+        | _ ->
+            async{
+                return Error("Target was null, empty, or whitespace",None)
+            }
 
 [<RequireQualifiedAccess>]
 module Json =

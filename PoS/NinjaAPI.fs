@@ -5,8 +5,10 @@ open PathOfSupporting.Internal.Helpers
 type FetchArguments = |TargetUrlOverrideOpt of string | League of string
 
 
-type SparkLine ={TotalChange:decimal;Data:float list}
+[<NoComparison>]
+type SparkLine ={TotalChange:decimal;Data:float System.Nullable list}
 type ValueEntry = {id:int;League_id:int;Pay_Currency_Id:int;Get_Currency_Id:int;Count:int;Value:decimal;}
+[<NoComparison>]
 type Line = {CurrencyTypeName:string;ChaosEquivalent:decimal;Receive:ValueEntry;ReceiveSparkLine:SparkLine;DetailsId:string;Pay:ValueEntry;PaySparkLine:SparkLine;LowConfidencePaySparkLine:SparkLine}
 type CurrencyDetail = {Id:int;Icon:string;Name:string;PoeTradeId:int}
 [<NoComparison>]
@@ -37,3 +39,4 @@ module Fetch =
         |> Impl.fetchCurrency
         |> Async.map Option.ofOk
         |> Async.map (Option.map fst)
+
