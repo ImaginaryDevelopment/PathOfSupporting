@@ -145,5 +145,9 @@ module Fetch =
             {ChangeId=changeId; Stashes=items |> Seq.choose (function |{StashOpt=(Ok x)} -> Some x | _ -> None) |> List.ofSeq}
         )
 
+    let fetchSynchronously args =
+        fetchStashes args
+        |> AsyncSeq.toBlockingSeq
+
 
 

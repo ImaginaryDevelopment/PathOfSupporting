@@ -419,17 +419,18 @@ module Api =
         | ValueString _ ->
             async{
                 use client = new System.Net.Http.HttpClient()
-                try
-                    let! result = client.GetStringAsync target |> Async.AwaitTask
-                    return Ok result
-                with ex ->
-
-                    return Error (target,Some <| Rethrowable( ExceptionDispatchInfo.Capture ex))
+                let! result = client.GetStringAsync target |> Async.AwaitTask
+                return Ok result
             }
         | _ ->
             async{
                 return Error("Target was null, empty, or whitespace",None)
             }
+        |> Async.Catch
+        |> Async.map(function
+            |Choice1Of2 x -> x
+            |Choice2Of2 ex -> Result.ExDI (sprintf "Exception fetching %s" target) ex
+        )
 
 [<RequireQualifiedAccess>]
 module Json =

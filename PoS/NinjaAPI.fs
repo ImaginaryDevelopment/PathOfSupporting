@@ -23,16 +23,12 @@ module Impl =
 
     let fetchCurrency t=
             Api.fetch t
-            |> Async.Catch
-            |> Async.map(function
-                |Choice1Of2 x -> x
-                |Choice2Of2 ex -> Result.ExDI (sprintf "Exception fetching %s" t) ex
-            )
             |> Async.map(Result.bind(fun raw ->
                     match SuperSerial.deserialize<NinjaResponse> raw with
                     | Ok nr -> Ok (nr,raw)
                     | Error e -> Result.ErrAdd "raw" raw e |> Error
             ))
+
 module Fetch =
     let fetchCurrency targeting =
         Impl.getTargeting targeting
