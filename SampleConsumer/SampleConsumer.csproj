@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="LadderAPI.cs" />
+    <Compile Include="Parsing\HtmlParsing.cs" />
     <Compile Include="Parsing\ItemParsing.cs" />
     <Compile Include="NinjaAPI.cs" />
     <Compile Include="StashAPI.cs" />

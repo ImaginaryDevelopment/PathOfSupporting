@@ -1,4 +1,4 @@
-module PathOfSupporting.Parsing.Html
+namespace PathOfSupporting.Parsing.Html
 open System.Net.Http
 open System.Collections.Generic
 open PathOfSupporting.Internal.Helpers
@@ -76,6 +76,19 @@ type GetResult =
     |Success of Character[]
     |FailedDeserialize of PoSError
     |FailedHttp of string
+    with
+        member x.GetSuccess() =
+            match x with
+            | Success ch -> Some ch
+            | _ -> None
+        member x.GetFailedDeserialize() =
+            match x with
+            | FailedDeserialize e -> Some e
+            | _ -> None
+        member x.GetFailedHttp() =
+            match x with
+            |FailedHttp msg -> Some msg
+            | _ -> None
 module PathOfExile =
     module Com =
         let getCharacters accountName =

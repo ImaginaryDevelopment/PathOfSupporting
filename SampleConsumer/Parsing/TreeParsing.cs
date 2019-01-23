@@ -29,7 +29,7 @@ namespace SampleConsumer.Parsing
             {
                 var sgResult = getSkillGems(Rp);
                 // have to check isOk since C#'s pattern matching to var will accept nulls
-                if (sgResult.IsOk && sgResult.GetOkOrNull()?.toList() is var sgs)
+                if (sgResult.IsOk && sgResult.ResultValue.toList() is var sgs)
                 {
                     Console.WriteLine("Found " + sgs.Count + " skill gem(s)");
                     foreach (var g in sgs)

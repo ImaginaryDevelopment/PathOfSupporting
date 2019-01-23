@@ -10,7 +10,7 @@ namespace SampleConsumer
     {
         static void Main(string[] args)
         {
-            LadderAPI.GetLadder().GetAwaiter().GetResult();
+            Parsing.HtmlParsing.GetCharacters();
             Console.ReadLine();
             ItemParsing.ParseItem();
             Parsing.TreeParsing.Gems.GetSkillGem();
@@ -25,6 +25,7 @@ namespace SampleConsumer
             StashAPI.FetchLeagueChangeSets();
             NinjaAPI.FetchCurrency();
             NinjaAPI.FetchDebug().GetAwaiter().GetResult();
+            LadderAPI.GetLadder().GetAwaiter().GetResult();
 
             Console.WriteLine();
             Console.WriteLine("Done...");

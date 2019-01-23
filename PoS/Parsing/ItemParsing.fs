@@ -70,13 +70,14 @@ module Resistances =
                 | _ -> elTotal
         ) 0
 
+    // add the Pseudo totals
     let foldTotal items =
         let x =
             items
             |> Seq.map snd
             |> Seq.sum
         let elem = foldElemental items
-        items@["Elemental",elem;"Total",x]
+        items@["+#% total Elemental Resistance",elem;"+#% total Resistance",x]
 
     // typically fed an item copied from within PoE fetched via
     // let getText () = System.Windows.Forms.Clipboard.GetText()
