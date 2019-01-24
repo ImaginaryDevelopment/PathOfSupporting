@@ -53,9 +53,10 @@ module Impl =
         let getParentNode = mapNode(fun x -> x.ParentNode)
         let selectNodes (xpath:string)= bind(fun x -> x.SelectNodes(xpath) |> Option.ofObj |> Option.map (Seq.map wrap)) >> Option.defaultValue Seq.empty
         let selectNode (xpath:string) = mapNode(fun x -> x.SelectSingleNode xpath)
-        let getChildNodes = map(fun x -> x.ChildNodes |> Seq.cast<HtmlNode> |> Seq.map wrap) >> Option.defaultValue Seq.empty
+        let getChildNodes = map(fun x -> x.ChildNodes |> Seq.cast<HtmlNode> |> Seq.map wrap) >> Option.defaultValue Seq.empty >> Seq.filter(getOuterHtml >> String.IsNullOrWhiteSpace >> not)
         let getNextSibling = map(fun x -> x.NextSibling |> wrap)
         let getNodeType = map(fun x -> x.NodeType)
+        let getNodeName = map(fun x -> x.Name) >> Option.defaultValue null
         let getName = mapNull(fun x -> x.Name)
         let isNodeType nt = map(fun x -> x.NodeType = nt) >> Option.defaultValue false
         let collectHtml x = x |> Seq.map getOuterHtml |> delimit String.Empty
@@ -69,7 +70,12 @@ module Impl =
                 )
         let hasText = map(fun x -> x.InnerText |> String.IsNullOrWhiteSpace |> not) >> Option.defaultValue false
         let hasChildWith f = getChildNodes >> Seq.exists(f)
-
+        let parse x =
+            let hd = HtmlDocument()
+            hd.LoadHtml x
+            hd.DocumentNode
+            |> wrap
+        let (|NodeName|_|) n x = bind(fun x -> if x.Name = n then Some (wrap x) else None) x
 
 [<NoComparison>]
 type GetResult =
@@ -149,16 +155,9 @@ module PoeDb =
                                 eprintfn "Failed Fetch of %s,%s" t msg
                         return result
                 }
-            let parse x =
-                let hd = HtmlDocument()
-                hd.LoadHtml x
-                hd
             module Munge =
                 open Impl.Html
-                let mungeDoc (hd:HtmlDocument) =
-                    let wrapped =
-                        hd.DocumentNode
-                        |> wrap
+                let mungeDoc wrapped =
                     let nodes =
                         wrapped
                         |> selectNodes "//div/h4"
@@ -301,7 +300,7 @@ module PoeDb =
                 | Error e -> return Error e
                 | Ok fetched ->
                     return
-                        Impl.parse fetched
+                        Impl.Html.parse fetched
                         |> mungeDoc
                         |> Result.map List.ofSeq
                         |> Result.map (List.map (
@@ -311,7 +310,63 @@ module PoeDb =
 
 module PoeAffix =
     open PathOfSupporting.Parsing.Impl.FsHtml
+
     open System
+    module Enchantment =
+        open System.IO
+        open Impl.Html
+        open PathOfSupporting.Internal.BReusable.StringHelpers
+        open PathOfSupporting.Parsing.Trees.Gems
+
+        let findEnchantMatch (skills:Gem list) (htmlText:string) =
+            let inline isPair (sk:Gem) htmlDelim skillName = (htmlText |> containsI htmlDelim) && sk.Name=skillName
+            skills
+            |> List.tryFind(fun sk ->
+                let inline isPair d sn = isPair sk d sn
+                containsI sk.Name htmlText
+                || (isPair "Charged Slam" "Tectonic Slam")
+                || (isPair "Skeletons" "Summon Skeleton")
+                || (isPair "Animated Guardian" "Animate Guardian")
+                || (isPair "Animated Weapons" "Animate Weapon")
+                || (isPair "Holy Relic" "Summon Holy Relic")
+                || (isPair "Spectre" "Raise Spectre")
+                || (isPair "Zombie" "Raise Zombie")
+                || (isPair "Chaos Golem" "Summon Chaos Golem")
+                || (isPair "Lightning Golem" "Summon Lightning Golem")
+                || (isPair "Flame Golem" "Summon Flame Golem")
+                || (isPair "Ice Golem" "Summon Flame Golem")
+                || (isPair "Stone Golem" "Summon Stone Golem")
+                || (isPair "Fire Nova" "Fire Nova Mine")
+                || (isPair "Agony Crawler" "Herald of Agony")
+                || (isPair "Sentinels of Dominance" "Dominating Blow")
+                || (isPair "Sentinel of Dominance" "Dominating Blow")
+                || (isPair "Sentinels of Purity" "Herald of Purity")
+                || (isPair "Converted Enemies" "Conversion Trap")
+                || (isPair "Raging Spirits" "Summon Raging Spirit")
+            )
+            |> Option.map(fun x -> x.Name)
+
+
+        let parseOldEnchantment target =
+            let doc = 
+                File.ReadAllText target
+                |> parse
+            let body = doc |> selectNode "html/body"
+
+            body
+            |> getChildNodes
+            |> Seq.map(fun x ->
+                let title = selectNode "div[@id]" x |> getAttrValueOrNull "id" |> function | null -> getAttrValueOrNull "id" x | x -> x
+                let children =
+                    match x |> getChildNodes |> List.ofSeq with
+                    | (NodeName "div" d)::[] -> getChildNodes d
+                    | x -> x |> Seq.ofList
+                    |> Seq.filter(getNodeName>> (=) "br" >> not)
+                    |> Seq.unflatten (getNodeName >> (<>) "li") getInnerText id
+                title,children
+            )
+
+    ()
 
     type GoogleAd={TagId:string;SlotId:string;Comment:string;Width:int;Height:int;ExtraStyle:string}
     module Google =
@@ -434,8 +489,10 @@ module PoeAffix =
                 "Strongbox", "ot-box.html"
             ]
         ]
-    type BodyArg = {Main:Element list;Main2:Element list;Main3:Element list;Corruption:Element list;Left:Element list;Right:Element list}
-    let generateBody {Main=main;Main2=main2;Main3=main3;Corruption=corruption;Left=left;Right=right} scripts =
+    type BodyArg = {Main:Element list;Main2:Element list;Main3:Element list;Corruption:Element list;EnchantPage:string option
+                    Updated:DateTime
+                    Left:Element list;Right:Element list}
+    let generateBody {Main=main;Main2=main2;Main3=main3;EnchantPage=enchantOpt;Corruption=corruption;Left=left;Right=right;Updated=updated} scripts =
         body [] [
             yield div [A.id "wrapper"] [
                 header [A.id "header"] [
@@ -459,6 +516,11 @@ module PoeAffix =
                 ]
                 aside[A.id "corruption"] 
                     [
+                        match enchantOpt with
+                        | None -> ()
+                        | Some enchant ->
+                            yield div [A.className "item"][ a[A.href enchant; A.className "specialeffects"] %("Enchantment")]
+
                         yield div[A.id"ilvlFilter"] [
                             label [] %"ILvl filter"
                             input [A.id "ilvlInput";"type"%="number"]
@@ -473,6 +535,10 @@ module PoeAffix =
                     Google.ad {TagId= "lowermiddlesidebarad";Comment= "300x250 Display";Width=300;Height=250;SlotId="3764606006";ExtraStyle=null}
                 ]
             ]
+            yield footer [A.className "footer"] [
+                div [A.id "footermsg"] %("© 2015-2017. This site is not affiliated with, endorsed, or sponsored by Grinding Gear Games.")
+                comment (sprintf "Updated %s" <| updated.ToLongDateString())
+            ]
             yield Script.src "js/closemodal.js"
             yield Script.src "js/mod.js"
             yield! scripts
@@ -485,7 +551,7 @@ module PoeAffix =
         ]
 
     module Index =
-        let generateIndexBody scripts =
+        let generateIndexBody updated scripts =
             let blogItems =
                 let blogItem (date:DateTime,x)=
                     // deviate, wrap each blurb in an element
@@ -499,15 +565,15 @@ module PoeAffix =
                 [
                     DateTime(2019,1,18),[center [] %"Quite a few betrayal affixes are in"]
                     DateTime(2019,1,9),[center [] %"Working on new betrayal affixes"]
-                    DateTime(2018,8,4),[    center[] [
-                                                Text "Incorrect or missing information should be reported at" 
-                                                u [] [a[A.href "https://github.com/poeaffix/poeaffix.github.io"] %"github.com/poeaffix"]
-                                            ]
-                                            br []
-                                            Text "Added new Vaal orb corruptions."
-                                            br []
-                                            br []
-                                            Text """If a piece of gear has more life, energy shield, evasion, or armour value than a single listed mod, it's
+                    DateTime(2018,8,4),[center[] [
+                                                    Text "Incorrect or missing information should be reported at" 
+                                                    u [] [a[A.href "https://github.com/poeaffix/poeaffix.github.io"] %"github.com/poeaffix"]
+                                                ]
+                                        br []
+                                        Text "Added new Vaal orb corruptions."
+                                        br []
+                                        br []
+                                        Text """If a piece of gear has more life, energy shield, evasion, or armour value than a single listed mod, it's
                     because the item has two mods that combine that stat. This is also the case for physical and spell damage on
                     weapons, maybe more. Thanks for all the support."""
                     ]
@@ -535,6 +601,8 @@ module PoeAffix =
                     Main2=[ h2 [A.Style.hidden] %"x" ]
                     Main3=[ h2 ["style" %= "text-indent: 522px; margin-left: 0px; margin-right: 215px;"] %"Path of Exile Item Affixes" ]
                     Corruption=[div [][]]
+                    EnchantPage=None
+                    Updated=updated
                     Left=[
                             Google.ad {TagId="uppermiddlesidebaradINDEX";Width=300;Height=600;Comment="300x600 Display Only";ExtraStyle="margin-left: 0px";SlotId="2287872807"}
                         ]
