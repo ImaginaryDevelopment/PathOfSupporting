@@ -3,6 +3,9 @@ open System
 open System.Collections.Generic
 open System.Linq
 open System.Runtime.ExceptionServices
+open PathOfSupporting.Internal.BReusable.StringHelpers
+
+let remove d x = replace d String.Empty x
 
 [<NoComparison>]
 type PoSException =
