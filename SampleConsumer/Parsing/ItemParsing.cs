@@ -58,6 +58,5 @@ namespace SampleConsumer
             else
                 values.Dump();
         }
-
     }
 }

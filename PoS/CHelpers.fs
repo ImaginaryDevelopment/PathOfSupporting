@@ -1,4 +1,4 @@
-﻿/// open this file to get extension methods imported to make use from C# easier for the spots it is rough
+﻿/// open this namespace to get extension methods imported to make use from C# easier for the spots it is rough
 namespace CHelpers
 open System
 open System.Runtime.CompilerServices
@@ -48,6 +48,6 @@ type Extensions =
     static member GetValueOrDefault (x,defaultValue) = x |> Option.toNullable |> fun x -> x.GetValueOrDefault(defaultValue)
     [<Extension>]
     static member ToEnumerable (x:IAsyncEnumerable<_>) = FSharp.Control.AsyncSeq.toBlockingSeq x
-
-
+    [<Extension>]
+    static member ToTask (x:Async<_>) = Async.StartAsTask x
 

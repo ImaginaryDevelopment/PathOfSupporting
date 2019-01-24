@@ -1,4 +1,4 @@
-namespace PathOfSupporting.StashAPI // translated from https://github.com/ImaginaryDevelopment/LinqPad/blob/master/LINQPad%20Queries/gamey/PoE%20stash%20tab%20api.linq
+namespace PathOfSupporting.Api.Stash // translated from https://github.com/ImaginaryDevelopment/LinqPad/blob/master/LINQPad%20Queries/gamey/PoE%20stash%20tab%20api.linq
 open FSharp.Control
 
 open System.Collections.Generic
@@ -25,36 +25,6 @@ type Item = {
 type Stash = {AccountName:string;LastCharacterName:string;Id:string; Stash:string;StashType:string;Public:bool; Items:Item[]}
 type ChangeSet = {ChangeId:string;Stashes:Stash list}
 type FetchArguments = {TargetUrlOverrideOpt:string;StartingChangeIdOpt:string}
-
-//[<NoComparison;NoEquality>]
-//type FetchResult<'t> = {ItemOpt:PoSResultDI<'t>; Next:Async<FetchResult<'t>>} with
-//    static member map f (x:FetchResult<'t>):FetchResult<'tMapped> =
-//        {ItemOpt = Result.map f x.ItemOpt; Next=x.Next |> Async.map (FetchResult.map f)}
-//    static member toSeq (next:FetchResult<'t>):seq<FetchResult<'t>>=
-//        // I'm so grateful for my x
-//        let rec thankYou x =
-//            seq {
-//                yield x
-//                yield! Async.RunSynchronously x.Next |> thankYou
-//            }
-//        thankYou next
-//    member x.ThankYou :seq<FetchResult<'t>>=
-//        let rec gratefulForMy x =
-//            let thankYouNext =
-//                x.Next |> Async.map(fun x -> gratefulForMy x)
-//                }
-//            seq {
-//                yield x
-//                yield! Async.RunSynchronously x.Next |> gratefulForMy
-//            }
-//        gratefulForMy x
-//    static member changes (x:FetchResult<'t*string>):FetchResult<'t> =
-//        let mutable lastChange = x.ItemOpt |> Option.ofOk |> Option.map snd
-//        let result=
-//            (x,lastChange) |> Seq.unfold(fun state ->
-//                Unchecked.defaultof<_>
-//            )
-//        result
 
 module Impl =
     open PathOfSupporting
@@ -144,6 +114,10 @@ module Fetch =
         |> AsyncSeq.map(fun (changeId,items) ->
             {ChangeId=changeId; Stashes=items |> Seq.choose (function |{StashOpt=(Ok x)} -> Some x | _ -> None) |> List.ofSeq}
         )
+
+    let fetchSynchronously args =
+        fetchStashes args
+        |> AsyncSeq.toBlockingSeq
 
 
 

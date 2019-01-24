@@ -1,11 +1,10 @@
-﻿module PathOfSupporting.Parsing.Html
+namespace PathOfSupporting.Parsing.Html
 open System.Net.Http
 open System.Collections.Generic
 open PathOfSupporting.Internal.Helpers
 
 type Character = {Name:string;League:string; Class:string;Level:int}
 [<RequireQualifiedAccess>]
-[<NoComparison>]
 module Impl =
     open HtmlAgilityPack
 
@@ -77,6 +76,19 @@ type GetResult =
     |Success of Character[]
     |FailedDeserialize of PoSError
     |FailedHttp of string
+    with
+        member x.GetSuccess() =
+            match x with
+            | Success ch -> Some ch
+            | _ -> None
+        member x.GetFailedDeserialize() =
+            match x with
+            | FailedDeserialize e -> Some e
+            | _ -> None
+        member x.GetFailedHttp() =
+            match x with
+            |FailedHttp msg -> Some msg
+            | _ -> None
 module PathOfExile =
     module Com =
         let getCharacters accountName =
@@ -133,8 +145,8 @@ module PoeDb =
                             match result with
                             | Ok _ ->
                                 printfn "Fetched %s" t
-                            | Error e ->
-                                eprintfn "Failed Fetch of %s" t
+                            | Error (msg,_) ->
+                                eprintfn "Failed Fetch of %s,%s" t msg
                         return result
                 }
             let parse x =

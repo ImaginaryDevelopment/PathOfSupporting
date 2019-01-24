@@ -10,6 +10,9 @@ namespace SampleConsumer
     {
         static void Main(string[] args)
         {
+            Api.CharacterAPI.GetCharacterPassives().GetAwaiter().GetResult();
+            Console.ReadLine();
+
             ItemParsing.ParseItem();
             Parsing.TreeParsing.Gems.GetSkillGem();
             Parsing.TreeParsing.Gems.GetSkillGems();
@@ -21,6 +24,11 @@ namespace SampleConsumer
             StashAPI.FetchOne();
             StashAPI.FetchLeagueStashes();
             StashAPI.FetchLeagueChangeSets();
+            NinjaAPI.FetchCurrency();
+            NinjaAPI.FetchDebug().GetAwaiter().GetResult();
+            LadderAPI.GetLadder().GetAwaiter().GetResult();
+            Parsing.HtmlParsing.GetCharacters();
+
             Console.WriteLine();
             Console.WriteLine("Done...");
             Console.ReadLine();
