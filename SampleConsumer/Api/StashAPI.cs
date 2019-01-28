@@ -14,7 +14,7 @@ namespace SampleConsumer
     {
         public static void FetchOne()
         {
-            var stashes = Fetch.fetchStashes(new FetchArguments(null, null)).ToEnumerable();
+            var stashes = Fetch.fetchStashes(new FetchArguments(targetUrlOverrideOpt: null,startingChangeIdOpt: null)).ToEnumerable();
             if (stashes.FirstOrDefault()?.Stashes?.FirstOrDefault() is Stash x)
                 Console.WriteLine("Stash:" + x);
             else Console.Error.WriteLine("Failed to fetch a stash tab");

@@ -19,7 +19,7 @@ namespace SampleConsumer.Parsing
         // target is ../../../PoS/
         // aka PathOfSupporting/PoS/
         internal static string GetResourcePath() => Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(Environment.CurrentDirectory))), "PoS");
-        internal static JsonResourcePath Rp => new JsonResourcePath(GetResourcePath(), null);
+        internal static JsonResourcePath Rp => new JsonResourcePath(GetResourcePath(),filename: null);
 
         // things we can read out of the Path of Exile official Gems.json
         public static class Gems
@@ -76,7 +76,8 @@ namespace SampleConsumer.Parsing
                         Console.WriteLine(n.Name + " - " + n.Effects);
                     }
                 }
-                else if (decodeResult.GetErrOrDefault() is var err){
+                else if (decodeResult.GetErrOrDefault() is var err)
+                {
                     Console.Error.WriteLine(err.Item1);
                 }
             }
@@ -90,7 +91,7 @@ namespace SampleConsumer.Parsing
             public static void Parse(string codeOrUrl, Action<Character> actionOpt = null)
             {
                 var result = PathOfBuildingParsing.processCodeOrPastebin(codeOrUrl);
-                if(result.IsOk && result.GetOkOrNull() is var x)
+                if (result.IsOk && result.GetOkOrNull() is var x)
                 {
                     if (actionOpt is null)
                         Console.WriteLine(x.Class + " " + x.Ascendancy);

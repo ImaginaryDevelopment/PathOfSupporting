@@ -14,11 +14,11 @@ namespace SampleConsumer
     {
         public async static Task GetLadder()
         {
-            var result = await Fetch.fetchLadder(LadderArguments.NewWithDetails(new FetchDetails("Standard", null, null, null, null, null, null))).ToTask();
-            if(result?.Value != null && result.Value is var ladder)
+            var result = await Fetch.fetchLadder(LadderArguments.NewWithDetails(new FetchDetails("Standard", limit: null, offset: null, type: null, accountNameFilter: null, difficulty: null, labyrinthStart: null))).ToTask();
+            if (result?.Value != null && result.Value is var ladder)
             {
-                Console.WriteLine("Ladder has " +ladder.Total +  (ladder.Total == 1 ? " entry" : " entries"));
-                foreach(var e in ladder.Entries)
+                Console.WriteLine("Ladder has " + ladder.Total + (ladder.Total == 1 ? " entry" : " entries"));
+                foreach (var e in ladder.Entries)
                 {
                     Console.Write(("  " + e.Character.Name + " ").PadRight(20));
                     Console.ForegroundColor = ConsoleColor.Red;

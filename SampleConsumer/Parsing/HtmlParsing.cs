@@ -15,7 +15,7 @@ namespace SampleConsumer.Parsing
         static async Task GetCharactersTask()
         {
             var result = await PathOfExile.Com.getCharacters("DevelopersDevelopersDevelopers").ToTask();
-            if(result.IsSuccess && result.GetSuccess().Value is var characters)
+            if (result.IsSuccess && result.GetSuccess().Value is var characters)
             {
                 Console.WriteLine("Characters fetched");
                 foreach (var ch in characters)

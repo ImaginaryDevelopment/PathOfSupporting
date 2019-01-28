@@ -19,8 +19,8 @@ namespace SampleConsumer.Api
         {
             var an = "DevelopersDevelopersDevelopers";
             var cn = "HazeMe";
-            var result = await Fetch.fetchPassiveTree(Apis.FetchArguments<PassiveSkillsArguments>.NewValues(new PassiveSkillsArguments(an,character:cn))).ToTask();
-            if(result?.Value != null)
+            var result = await Fetch.fetchPassiveTree(Apis.FetchArguments<PassiveSkillsArguments>.NewValues(new PassiveSkillsArguments(an, character: cn))).ToTask();
+            if (result?.Value != null)
             {
                 var response = result.Value;
                 Console.WriteLine(an + ":" + cn);

@@ -11,7 +11,7 @@ namespace SampleConsumer
 {
     public static class NinjaAPI
     {
-        static FetchArguments fa = FetchArguments.NewLeague("Betrayal");
+        static readonly FetchArguments fa = FetchArguments.NewLeague("Betrayal");
         public static void FetchCurrency()
         {
             var ninjaResponse = Fetch.fetchCurrency(fa).ToTask().Result?.Value;
@@ -29,17 +29,17 @@ namespace SampleConsumer
         public static async Task FetchDebug()
         {
             var resultOrError = await Impl.fetchCurrency(Impl.getTargeting(fa)).ToTask();
-            if (resultOrError .IsOk)
+            if (resultOrError.IsOk)
             {
-                var (ninja,rawResponse) = resultOrError.ResultValue;
+                var (ninja, rawResponse) = resultOrError.ResultValue;
                 Console.WriteLine("Ninja Result:" + ninja);
             }
             else
             {
-                var (errorMsg,errorInfo) = resultOrError.ErrorValue;
+                var (errorMsg, errorInfo) = resultOrError.ErrorValue;
                 Console.Error.WriteLine(errorMsg);
-                if(errorInfo.Value != null)
-                Console.Error.WriteLine("Ninja Error: " + errorInfo.Value);
+                if (errorInfo.Value != null)
+                    Console.Error.WriteLine("Ninja Error: " + errorInfo.Value);
             }
         }
     }
