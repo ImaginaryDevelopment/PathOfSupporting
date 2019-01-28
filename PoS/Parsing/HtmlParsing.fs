@@ -387,7 +387,6 @@ module PoeAffix =
                     "data-ad-client"%="ca-pub-7924380187053536"
                     "data-ad-slot"%=slotId ][]
                 Script.text "(adsbygoogle = window.adsbygoogle || []).push({});"
-                
             ]
     // let (~%) s = [Text(s.ToString())]
     let generateHead title' scripts =

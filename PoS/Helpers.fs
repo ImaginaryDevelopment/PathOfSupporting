@@ -85,6 +85,26 @@ module AsyncSeq =
         }
 
 module Seq =
+    let outerJoin itemsA itemsB fA fB =
+        let bMap =
+            itemsB
+            |> List.map(fun b -> fB b, b)
+            |> Map.ofList
+        let aMap =
+            itemsA
+            |> List.map(fun a -> fA a, a)
+            |> Map.ofList
+        [
+            for a in itemsA do
+                let aKey = fA a
+                yield (Some a, bMap |> Map.tryFind aKey)
+            for b in itemsB do
+                let bKey = fB b
+                if not <| aMap.ContainsKey bKey then
+                    yield (None,Some b)
+        ]
+
+
     let tryTail items =
         items
         |> Seq.mapi(fun i x -> if i = 0 then None else Some x)
