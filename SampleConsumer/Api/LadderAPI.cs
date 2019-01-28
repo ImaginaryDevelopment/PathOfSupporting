@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using CHelpers;
-using Microsoft.FSharp.Control;
-using Microsoft.FSharp.Core;
 
 using PathOfSupporting.Api.Ladder;
 
