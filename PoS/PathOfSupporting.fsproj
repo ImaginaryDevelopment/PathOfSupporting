@@ -24,11 +24,11 @@
     <Compile Include="Api\Stash.fs" />
     <Compile Include="Api\Ladder.fs" />
     <Compile Include="Api\PoENinja.fs" />
-    <Compile Include="Parsing\FsHtml.fs" />
     <Compile Include="Parsing\ItemParsing.fs" />
     <Compile Include="Parsing\TreeParsing.fs" />
     <Compile Include="Parsing\PoBParsing.fs" />
     <Compile Include="Parsing\HtmlParsing.fs" />
+    <Compile Include="Generating\FsHtml.fs" />
     <Compile Include="Generating\PoEAffix.fs" />
     <Compile Include="Watching\LogWatching.fs" />
     <Compile Include="Dps.fs" />
