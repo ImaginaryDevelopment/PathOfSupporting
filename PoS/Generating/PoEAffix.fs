@@ -587,7 +587,7 @@ module Impl =
         let skills =
             match PathOfSupporting.Parsing.Trees.Gems.getSkillGems {ResourceDirectory="C:\projects\PathOfSupporting\PoS";Filename=None} with
             | Ok x -> x
-            | Error e -> e.Dump("skills error"); List.empty
+            | Error e -> e.Dump("skills error") |> ignore; List.empty
         PathOfSupporting.Internal.Helpers.Api.fetch "http://poedb.tw/us/mod.php?type=enchantment&an=helmet"
         |> Async.map (
             Result.map parse
@@ -602,7 +602,7 @@ module Impl =
                             else Some (Enchantment.findEnchantMatch skills text,x)
                         )
                         |> List.ofSeq
-                    (n |> Seq.filter(fst >> Option.isNone) |> Seq.map snd).Dump("unmatched")
+                    (n |> Seq.filter(fst >> Option.isNone) |> Seq.map snd).Dump("unmatched") |> ignore
                     n
                     |> Seq.choose(fun (x,y) -> x |> Option.map(fun x -> x,y))
                     |> Seq.groupBy fst

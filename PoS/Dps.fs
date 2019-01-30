@@ -142,7 +142,7 @@ type CharacterAttack = {WeaponStyle:WeaponStyle; Modifications:ModMap;Skill:Skil
                 {Min=dr.Min*eff+dr'.Min*eff;Max=dr.Max*eff+dr'.Max*eff}
     member x.Phys1hHit =
         x.Get1h()
-        |> fun x -> x.Dump("1h"); x
+        |> fun x -> x.Dump("1h")
         |> getHitBase x.Skill (x.Adds |> getDamageType Phys)
 
     member x.Phys2h =
