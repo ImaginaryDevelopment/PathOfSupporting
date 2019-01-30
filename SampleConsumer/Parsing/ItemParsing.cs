@@ -39,7 +39,7 @@ namespace SampleConsumer
                 +63 to maximum Mana
                 17% increased Rarity of Items found
                 +43% to Fire Resistance
-                +27% to Lightning Resistance" ;
+                +27% to Lightning Resistance";
             ParseItem(text);
         }
 

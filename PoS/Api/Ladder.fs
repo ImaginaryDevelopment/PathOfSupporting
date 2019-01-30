@@ -6,7 +6,8 @@ open PathOfSupporting.Internal.Helpers
 type FetchDetails = {League:string;Limit:int option;Offset:int option;Type:string;AccountNameFilter:string;Difficulty:string;LabyrinthStart:System.DateTime option}
 type LadderArguments = |TargetUrlOverrideOpt of string | WithDetails of FetchDetails
 
-type LadderCharacter = {Name:string;Level:int;Class:string;Experience:int64;Id:string}
+type LadderDepth = {Default:int;Solo:int}
+type LadderCharacter = {Name:string;Level:int;Class:string;Experience:int64;Id:string;Depth:LadderDepth}
 type LadderGuild = {Id:string;Name:string;Tag:string;CreatedAt:string;StatusMessage:string}
 type LadderTwitchInfo = {Name:string}
 type LadderAccount = {Name:string;LadderGuild:LadderGuild option;Challenges:string*string list;Twitch:LadderTwitchInfo option}
