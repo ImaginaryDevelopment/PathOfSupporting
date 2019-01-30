@@ -36,7 +36,7 @@ module GameMath=
         let baseInc = (base'*(100m+inc)/100m)
         let total = baseInc * more
         if debug then
-            (base',inc,more,baseInc,total).Dump("base',inc,more,baseInc,total")
+            (base',inc,more,baseInc,total).Dump("base',inc,more,baseInc,total") |> ignore
         total
     let foldMinMax dr dr' =
         {Min=dr.Min+dr'.Min; Max=dr.Max+dr.Max}
@@ -64,7 +64,7 @@ module GameMath=
         ) (LanguagePrimitives.GenericOne)
         >> fun v ->
             if debug then
-                v.Dump("More folded")
+                v.Dump("More folded")|>ignore
             v
 ()
 open GameMath
@@ -119,7 +119,7 @@ module Hits =
             let dr = getHitBase sk add w
             let result = {Min=getEff dr.Min;Max=getEff dr.Max}
             if debug then
-                (moar,inc,dr,result).Dump("m,inc,dr,r")
+                (moar,inc,dr,result).Dump("m,inc,dr,r") |> ignore
             dt,result
         )
     ()
@@ -156,7 +156,7 @@ type CharacterAttack = {WeaponStyle:WeaponStyle; Modifications:ModMap;Skill:Skil
         let getEff v = getEff v inc moar
         let result =  {Min=getEff x.Phys1hHit.Min; Max= getEff x.Phys1hHit.Max}
         if debug then
-            (moar,inc,x.Phys1hHit,result).Dump("m,inc,phys1hHit,r")
+            (moar,inc,x.Phys1hHit,result).Dump("m,inc,phys1hHit,r") |> ignore
         result
     member __.Total1H = ()
 

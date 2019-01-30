@@ -145,7 +145,7 @@ module PathOfBuildingParsing =
             let xDoc =
                 let xml = fromBase64ToXml base64 |> XDocument.Parse
                 let tXml = xml |> string |> replace "Spec:" String.Empty
-                dump (Some "pob") (Some "xml") id <| box tXml
+                Util.dumpToView (Some "pob") (Some "xml") id <| box tXml
                 tXml |> XDocument.Parse
             dumpXE (Some "parsed") None xDoc.Root
 
@@ -170,7 +170,7 @@ module PathOfBuildingParsing =
                     Tree = null
                     Notes=getNotes xDoc.Root
                 }
-            Utils.dump (Some "character") (Some "txt") id <| box result
+            Util.dumpToView (Some "character") (Some "txt") id <| box result
             result
 
     open Impl

@@ -1,11 +1,15 @@
 ﻿module PathOfSupporting.Internal.Helpers // purpose things that likely would be good in BReusable, but aren't in the canonical file - https://github.com/ImaginaryDevelopment/FsInteractive/blob/master/BReusable.fs
 open System
 open System.Collections.Generic
+open System.Text.RegularExpressions
 open System.Linq
 open System.Runtime.ExceptionServices
+
 open PathOfSupporting.Internal.BReusable.StringHelpers
 
 let remove d x = replace d String.Empty x
+let inline fValueString f = function | null | "" as x -> x | x -> f x
+let rReplace dp rp = fValueString (fun x -> Regex.Replace(x,pattern=dp,replacement=rp))
 
 [<NoComparison>]
 type PoSException =
@@ -193,10 +197,12 @@ module Reflection =
                 ) |> Option.defaultValue (sprintf "%A" x)
         fIt x
 
+#if !LINQPAD
 [<AutoOpen>]
-module Utils =
+module Util =
     open System.IO
-    let dump titleOpt extensionOverrideOpt (f:_ -> obj) (x:'t) =
+    let ClearResults() = Console.Clear()
+    let dumpToView titleOpt extensionOverrideOpt (f:_ -> obj) (x:'t) =
         let extension = defaultArg extensionOverrideOpt "json"
         if System.Diagnostics.Debugger.IsAttached then
             let vsCodePath = @"C:\Program Files (x86)\Microsoft VS Code\bin\code.cmd"
@@ -228,6 +234,7 @@ module Utils =
                     System.Diagnostics.Process.Start(vsCodePath,tmp)
                     |> ignore
 
+#endif
 module Async =
     let map f x =
         async{
@@ -423,7 +430,7 @@ module Xml =
         toXmlNode xe
         |> SuperSerial.serializeXmlNodePretty
 
-    let dumpXE titleOpt extensionOverrideOpt (xe:XElement) = dump titleOpt extensionOverrideOpt (serializeXElementPretty>>box) xe
+    let dumpXE titleOpt extensionOverrideOpt (xe:XElement) = dumpToView titleOpt extensionOverrideOpt (serializeXElementPretty>>box) xe
 
 module Api =
     open PathOfSupporting.Configuration
