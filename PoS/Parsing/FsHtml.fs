@@ -30,7 +30,7 @@ let toString (e : Element) : string =
             let hasChildren = List.exists (function _ -> true) children
             // scripts must not be self-closing
             let hasElementChildren = List.exists(function |Element _ -> true | _ -> false) children
-            let disAllowSelfClose = name="script" || name="a"
+            let disAllowSelfClose = name="script" || name="a" || name="div"
             if name="script" && hasElementChildren then
                 invalidOp "scripts can't have non-text children"
             if hasChildren || disAllowSelfClose then
