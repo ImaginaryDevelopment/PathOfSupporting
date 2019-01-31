@@ -206,11 +206,11 @@ module Nav =
                 "Raw Misc Mods", "RePoE/misc.html"
             ]
         ]
-type BodyArg = {Main:Element list;Main2:Element list;Main3:Element list;Corruption:Element list;EnchantPage:string option
+type BodyArg = {Main:Element list;Main2:Element list;Main3:Element list;InsertFullNav:bool; Corruption:Element list;EnchantPage:string option
                 Updated:DateTime
                 Left:Element list;Right:Element list;TrailingCenter:Element list}
 module BodyDetail =
-    let generateBody depth {Main=main;Main2=main2;Main3=main3;EnchantPage=enchantOpt;Corruption=corruption;Left=left;Right=right;TrailingCenter=tc;Updated=updated} scripts =
+    let generateBody depth {Main=main;Main2=main2;Main3=main3;InsertFullNav=doNav; EnchantPage=enchantOpt;Corruption=corruption;Left=left;Right=right;TrailingCenter=tc;Updated=updated} scripts =
         body [] [
             yield div [A.id "wrapper"] [
                 header [A.id "header"] [
@@ -220,7 +220,7 @@ module BodyDetail =
                         ]
                     ]
                     Google.ad {TagId="ad";SlotId="5241339200";Comment="728x90 Banner";Width=728;Height=90;ExtraStyle=null}
-                    nav [A.id "mainav"] []
+                    nav [A.id "mainav"] (if doNav then [ Nav.makeSiteNav depth] else [])
                 ]
                 div[A.id "paypal"] [
                     a[A.href "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=S6L2QZULXFK7E"][
@@ -322,6 +322,7 @@ module Index =
                 Main=[ h2 [A.Style.hidden] %"xx" ]
                 Main2=[ h2 [A.Style.hidden] %"x" ]
                 Main3=[ h2 ["style" %= "text-indent: 522px; margin-left: 0px; margin-right: 215px;"] %"Path of Exile Item Affixes" ]
+                InsertFullNav=true
                 Corruption=[div [][]]
                 EnchantPage=None
                 Updated=updated
@@ -337,7 +338,7 @@ module Index =
             scripts
 
 
-type Page = | Page of string
+type Page = | Page of string with member x.Value = match x with |Page pg -> pg
 module Impl =
     open System.IO
 
@@ -355,7 +356,8 @@ module Impl =
         >> HtmlAgilityPack.HtmlNode.CreateNode
         >> wrap 
         >> getChildNodes
-    let targets : (_*Page*_*string option) list =
+    type Target = {ModPageInfo:ModPageInfo;Page:Page;CorruptionElements:Element list;Enchant:string option}
+    let targets : Target list =
         let openModalDiv i ident style =
             div [A.id <| sprintf "openModal%i" i;A.className "modalDialog"][
                     div[][
@@ -430,6 +432,7 @@ module Impl =
         |> List.map(fun (title,pg,corr) -> title, Page pg,corr)
         |> List.map(fun (x,pg,corr) -> {cn=x;an=null},pg,corr,None)
         |> List.append complex
+        |> List.map(fun (mi,pg, corr,enchOpt)-> {ModPageInfo=mi;Page=pg;CorruptionElements=corr;Enchant=enchOpt})
 
     let getIds x=
         let rec getIt x =
@@ -567,7 +570,7 @@ module Impl =
             let right = x.Suffixes |> List.map makeSideBucket
             guardIds "right" (element "bah" [] right) |> ignore
             br [] :: left,br [] :: right
-        let mapItemAffixContainer pg corruption enchOpt {ItemType=item;Children=children} =
+        let mapItemAffixContainer insertFullNav (Page pg) corruption enchOpt {ItemType=item;Children=children} =
             let left,right =
                 children
                     |> FixDivisor<_>.ofContainers
@@ -578,6 +581,7 @@ module Impl =
                     Main2=[h2[] %(item)]
                     Main3=[h2[] %("Suffix")]
                     Corruption=corruption
+                    InsertFullNav=insertFullNav
                     EnchantPage=enchOpt
                     Left=left
                     Right=right
@@ -589,26 +593,27 @@ module Impl =
             |> sprintf "<!doctype html>\r\n%s"
             |> writeText (sprintf @"C:\projects\poeaffix.github.io\%s.html" pg)
 
-        fun (anCn,pg, corruption,enchOpt) ->
-            anCn 
+        fun (t,insertFullNav) ->
+            t.ModPageInfo
             |> parseModPhp
             |> Async.map(
-                Result.map(List.map (mapItemAffixContainer pg corruption enchOpt))
+                Result.map(List.map (mapItemAffixContainer insertFullNav t.Page t.CorruptionElements t.Enchant))
             )
-    let wrapProcess now (cn,Page pg,corr,enchOpt) =
-        processOne now (cn,pg,corr,enchOpt)
+    //type Target = {ModPageInfo:ModPageInfo;Page:Page;CorruptionElements:Element list;Enchant:string option}
+    let wrapProcess now insertFullNav t =
+        processOne now (t,insertFullNav)
         |> Async.Catch
         |> Async.map(
             function
             |Choice1Of2 (Error e) ->
-                printfn "Success for %A to %s" cn pg
+                printfn "Success for %A to %s" t.ModPageInfo t.Page.Value
                 Some e
             |Choice1Of2 _x -> None
             |Choice2Of2 y ->
-                printfn "Failed %s %A to %s" y.Message cn pg
+                printfn "Failed %s %A to %s" y.Message t.ModPageInfo t.Page.Value
                 eprintfn "<%s>\r\n\r\n" y.StackTrace 
-                y.Data.Add("cn",box cn)
-                y.Data.Add("pg",box pg)
+                y.Data.Add("cn",box t.ModPageInfo)
+                y.Data.Add("pg",box t.Page.Value)
                 let pe =PathOfSupporting.Internal.Helpers.PoSException.Exception y
                 Some("processOne error",Some pe) // PathOfSupporting.Internal.Helpers
         )
@@ -649,7 +654,7 @@ module Impl =
         |> ignore
     let runAffixes now =
         targets
-        |> List.map (wrapProcess now)
+        |> List.map (wrapProcess now false)
         |> List.map Async.RunSynchronously
         |> List.choose id
         |> fun x ->
