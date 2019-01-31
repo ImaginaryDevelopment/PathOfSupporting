@@ -194,6 +194,14 @@ module Script =
     let text txt = script [] %(txt)
     // the type attribute is unnecessary for js resources
     let src src = script [A.src src][]
-    
 //let comment text = element "!--" [] %(text)
+module AgilityPack =
+    open HtmlAgilityPack
+
+    let toFsHtml x =
+        let rec f (x:HtmlNode) =
+            let attr = x.Attributes |> Seq.map(fun a -> Attr(a.Name, a.Value)) |> List.ofSeq
+            let elements = x.ChildNodes |> Seq.map f |> List.ofSeq
+            element x.Name attr elements
+        f x
 
