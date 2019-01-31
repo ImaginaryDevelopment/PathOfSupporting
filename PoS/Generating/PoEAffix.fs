@@ -246,9 +246,11 @@ module BodyDetail =
                     Google.ad {TagId= "lowermiddlesidebarad";Comment= "300x250 Display";Width=300;Height=250;SlotId="3764606006";ExtraStyle=null}
                 ]
             ]
+            let updateString =updated.ToLongDateString()
             yield footer [A.className "footer"] [
-                div [A.id "footermsg"] %("© 2015-2017. This site is not affiliated with, endorsed, or sponsored by Grinding Gear Games.")
-                comment (sprintf "Updated %s" <| updated.ToLongDateString())
+                div [A.id "footermsg"]
+                    %(sprintf "&copy; 2015-2017. This site is not affiliated with, endorsed, or sponsored by Grinding Gear Games. (last updated %s)" updateString)
+                comment (sprintf "Updated %s" updateString)
             ]
             yield Script.src <| addBase depth "js/closemodal.js"
             yield Script.src <| addBase depth "js/mod.js"
