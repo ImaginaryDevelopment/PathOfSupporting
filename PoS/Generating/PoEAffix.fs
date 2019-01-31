@@ -1,8 +1,8 @@
-﻿namespace PathOfSupporting.Parsing.PoEAffix
+﻿namespace PathOfSupporting.Generating.PoEAffix
 open System
 
 open PathOfSupporting.Internal.Helpers
-open PathOfSupporting.Parsing.Impl.FsHtml
+open PathOfSupporting.Generating.Impl.FsHtml
 open PathOfSupporting.Parsing.Html.Impl.Html
 
 module Enchantment =
@@ -80,16 +80,18 @@ module Google =
                 "data-ad-slot"%=slotId ][]
             Script.text "(adsbygoogle = window.adsbygoogle || []).push({});"
         ]
-
-module HeadDetail =
+module Basing =
     open PathOfSupporting.Internal.BReusable.StringHelpers
-
     let addBase depth x =
         match depth with
         | i when i < 1 -> x
         | i ->
             let prefix = [0..i-1] |> List.map(fun _ -> "..")
             x::prefix |> List.rev |> delimit "/"
+open Basing
+
+module HeadDetail =
+
 
     // headAllotment goes in after standard scripts before Google Ad Script stuff
     let generateHead title' depth headAlottment =
@@ -106,13 +108,14 @@ module HeadDetail =
 
 module Nav =
 // let (~%) s = [Text(s.ToString())]
-    let navItem title pageMap =
+    let navItem title depth pageMap =
         li [] [
             Text title
-            ul [] (pageMap |> List.map(fun (title,href) -> li [] [a ["href"%=href] %(title)] ))
+            ul [] (pageMap |> List.map(fun (title,href) -> li [] [a ["href"%=addBase depth href] %(title)] ))
         ]
-    let siteNav =
-        ul [] [
+    let makeSiteNav depth =
+        let navItem t = navItem t depth
+        ul [A.className "nav"] [
             navItem "One Hand" [
                 "Axe", "1h-axe.html"
                 "Claw", "1h-claw.html"
@@ -192,13 +195,14 @@ module Nav =
             navItem "Other" [
                 "Map", "ot-map.html"
                 "Strongbox", "ot-box.html"
+                "Raw Item Mods", "RePoE/item.html"
+                "Raw Abyss Mods", "RePoE/abyss_jewel.html"
             ]
         ]
 type BodyArg = {Main:Element list;Main2:Element list;Main3:Element list;Corruption:Element list;EnchantPage:string option
                 Updated:DateTime
                 Left:Element list;Right:Element list}
 module BodyDetail =
-    let private addBase = HeadDetail.addBase
     let generateBody depth {Main=main;Main2=main2;Main3=main3;EnchantPage=enchantOpt;Corruption=corruption;Left=left;Right=right;Updated=updated} scripts =
         body [] [
             yield div [A.id "wrapper"] [
@@ -209,7 +213,7 @@ module BodyDetail =
                         ]
                     ]
                     Google.ad {TagId="ad";SlotId="5241339200";Comment="728x90 Banner";Width=728;Height=90;ExtraStyle=null}
-                    nav [A.id "mainav"] [ Nav.siteNav ]
+                    nav [A.id "mainav"] [ Nav.makeSiteNav depth ]
                 ]
                 div[A.id "paypal"] [
                     a[A.href "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=S6L2QZULXFK7E"][
@@ -246,15 +250,15 @@ module BodyDetail =
                 div [A.id "footermsg"] %("© 2015-2017. This site is not affiliated with, endorsed, or sponsored by Grinding Gear Games.")
                 comment (sprintf "Updated %s" <| updated.ToLongDateString())
             ]
-            yield Script.src <| HeadDetail.addBase depth "js/closemodal.js"
-            yield Script.src <| HeadDetail.addBase depth "js/mod.js"
+            yield Script.src <| addBase depth "js/closemodal.js"
+            yield Script.src <| addBase depth "js/mod.js"
             yield! scripts
         ]
 module AffixPages =
-    let generateAffixPage title' bodyArg=
+    let generateAffixPage title' depth bodyArg=
         html [][
-            yield HeadDetail.generateHead title' 0 []
-            yield BodyDetail.generateBody 0 bodyArg []
+            yield HeadDetail.generateHead title' depth []
+            yield BodyDetail.generateBody depth bodyArg []
         ]
 
 module Index =
@@ -427,6 +431,12 @@ module Impl =
                     yield! List.collect getIt children
                 ]
         getIt x
+    let generateToggle toggleId toggleAttr toggleContent contentAttr content =
+        [   div (List.append toggleAttr ["onclick"%= sprintf "toggle('%s')" toggleId]) [
+                    a [A.href "#/";"type"%="changecolor"] toggleContent
+            ]
+            div (List.append contentAttr [A.id toggleId;"style"%="display: none"]) content
+        ]
     let generateAffix i (item:AffixTierContainer<TieredAffix>) =
         let cleanAffixDisplay =
             let pattern = @"data-tooltip=""(<[^""]+)"" " 
@@ -513,7 +523,7 @@ module Impl =
             (toString x).Dump() |> ignore
             invalidOp "duplicate"
         x
-    let processOne =
+    let processOne now =
         let generateAffixChild i (x:AffixContainer<AffixTierContainer<TieredAffix>>) =
             let j,children =
                 ((i,List.empty),x.Children)
@@ -548,7 +558,7 @@ module Impl =
                     |> FixDivisor<_>.ofContainers
                     |> FixDivisor<_>.mapi (generateAffixChild )
                     |> toHtmlModBucket
-            AffixPages.generateAffixPage item 
+            AffixPages.generateAffixPage item 0
                 {   Main=[h2[] %("Prefix")]
                     Main2=[h2[] %(item)]
                     Main3=[h2[] %("Suffix")]
@@ -556,7 +566,7 @@ module Impl =
                     EnchantPage=enchOpt
                     Left=left
                     Right=right
-                    Updated=DateTime.UtcNow
+                    Updated=now
                 }
             |> guardIds "fin"
             |> toString
@@ -569,20 +579,24 @@ module Impl =
             |> Async.map(
                 Result.map(List.map (mapItemAffixContainer pg corruption enchOpt))
             )
-    let wrapProcess (cn,Page pg,corr,enchOpt) =
-        processOne (cn,pg,corr,enchOpt)
+    let wrapProcess now (cn,Page pg,corr,enchOpt) =
+        processOne now (cn,pg,corr,enchOpt)
         |> Async.Catch
         |> Async.map(
             function
-            |Choice1Of2 (Error e) -> Some e
+            |Choice1Of2 (Error e) ->
+                printfn "Success for %A to %s" cn pg
+                Some e
             |Choice1Of2 _x -> None
             |Choice2Of2 y ->
+                printfn "Failed %s %A to %s" y.Message cn pg
                 y.Data.Add("cn",box cn)
                 y.Data.Add("pg",box pg)
                 let pe =PathOfSupporting.Internal.Helpers.PoSException.Exception y
                 Some("processOne error",Some pe) // PathOfSupporting.Internal.Helpers
         )
-        
+
+    // doesn't currently write a file it appears
     let runHelmetEnchant() =
         let skills =
             match PathOfSupporting.Parsing.Trees.Gems.getSkillGems {ResourceDirectory="C:\projects\PathOfSupporting\PoS";Filename=None} with
@@ -616,9 +630,9 @@ module Impl =
         |> Async.RunSynchronously
         |> Dump
         |> ignore
-    let runAffixes() =
+    let runAffixes now =
         targets
-        |> List.map wrapProcess
+        |> List.map (wrapProcess now)
         |> List.map Async.RunSynchronously
         |> List.choose id
         |> fun x ->
@@ -626,16 +640,17 @@ module Impl =
             x.Dump(maxDepth=1)
         |> ignore
 
-    let generateIndex() =
+    let generateIndex now =
         html [] [
             HeadDetail.generateHead "PoE Affix" 0 []
-            Index.generateIndexBody DateTime.UtcNow []
+            Index.generateIndexBody now []
         ]
         |> guardIds "fin"
         |> toString
         |> sprintf "<!doctype html>\r\n%s"
         |> fun x -> File.WriteAllText(sprintf @"C:\projects\poeaffix.github.io\%s.html" "index",x)
-        
-    let scrapeAll() =
-        generateIndex()
+
+    let scrapeAll now =
+        generateIndex now
+        runAffixes now
         runHelmetEnchant()

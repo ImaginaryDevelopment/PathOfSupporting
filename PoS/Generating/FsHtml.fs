@@ -1,4 +1,4 @@
-﻿module PathOfSupporting.Parsing.Impl.FsHtml
+﻿module PathOfSupporting.Generating.Impl.FsHtml
 // https://github.com/y2k/FsHtml/blob/master/FsHtml.fs
 
 open System.Text
