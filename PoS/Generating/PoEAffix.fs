@@ -1,4 +1,4 @@
-﻿namespace PathOfSupporting.Generating.PoEAffix
+namespace PathOfSupporting.Generating.PoEAffix
 open System
 
 open PathOfSupporting.Internal.Helpers
@@ -473,7 +473,7 @@ module Impl =
                 a[A.href "#/";"type"%="changecolor"] %(title)
             ]
 
-        let generateAffixBlock ({ILvl=ilvl;DisplayHtml=innerHtml;Tier=tier;Meta=meta} as input) =
+        let generateAffixBlock ({ILvl=ilvl;DisplayHtml=innerHtml;Tier=tier;MetaHtml=metaHtml} as input) =
             try
                 let meta = cleanMeta meta
                 let tier = tier |> Option.ofValueString |> Option.map (replace "Tier " "T") |> Option.defaultValue null
