@@ -460,24 +460,29 @@ module Impl =
                 a[A.href "#/";"type"%="changecolor"] %(title)
             ]
 
-        let generateAffixBlock {ILvl=ilvl;DisplayHtml=innerHtml;Tier=tier;Meta=meta} =
-            let meta = cleanMeta meta
-            let tier = tier |> replace "Tier " "T"
-            let fossilOpt,display=cleanAffixDisplay innerHtml
-            let attrs = [
-                yield "data-ilvl"%=string ilvl
-                match fossilOpt with
-                | Some fo ->
-                    let fo =
-                        parseNodeForChildren fo
-                        |> Seq.filter(isNodeType HtmlNodeType.Element)
-                        |> List.ofSeq
-                        |> Seq.map(fun n -> sprintf "%s=%s" (getAttrValueOrNull "data-tooltip" n) (getInnerText n))
-                        |> delimit"&#10;"
-                    yield "title"%=fo
-                | None -> ()
-            ]
-            li attrs %(sprintf "iLvl %i: %s (%s)%s" ilvl display meta tier)
+        let generateAffixBlock ({ILvl=ilvl;DisplayHtml=innerHtml;Tier=tier;Meta=meta} as input) =
+            try
+                let meta = cleanMeta meta
+                let tier = tier |> Option.ofValueString |> Option.map (replace "Tier " "T") |> Option.defaultValue null
+                let fossilOpt,display=cleanAffixDisplay innerHtml
+                let attrs = [
+                    yield "data-ilvl"%=string ilvl
+                    match fossilOpt with
+                    | Some fo ->
+                        let fo =
+                            parseNodeForChildren fo
+                            |> Seq.filter(isNodeType HtmlNodeType.Element)
+                            |> List.ofSeq
+                            |> Seq.map(fun n -> sprintf "%s=%s" (getAttrValueOrNull "data-tooltip" n) (getInnerText n))
+                            |> delimit"&#10;"
+                        yield "title"%=fo
+                    | None -> ()
+                ]
+                li attrs %(sprintf "iLvl %i: %s (%s)%s" ilvl display meta tier)
+            with _ ->
+                eprintfn "failing on %A" input
+                System.Diagnostics.Debugger.Launch() |> ignore
+                reraise()
         
         let affixDescr= parseNodeForChildren item.Display |> Seq.map(getInnerText>>trim) |> Seq.filter(String.IsNullOrWhiteSpace >> not) |> delimit" "
         div ["data-descr"%=affixDescr;A.className "modWrapper";"data-modfor"%=string i][
@@ -592,6 +597,7 @@ module Impl =
             |Choice1Of2 _x -> None
             |Choice2Of2 y ->
                 printfn "Failed %s %A to %s" y.Message cn pg
+                eprintfn "<%s>\r\n\r\n" y.StackTrace 
                 y.Data.Add("cn",box cn)
                 y.Data.Add("pg",box pg)
                 let pe =PathOfSupporting.Internal.Helpers.PoSException.Exception y
@@ -638,7 +644,9 @@ module Impl =
         |> List.map Async.RunSynchronously
         |> List.choose id
         |> fun x ->
-            Util.ClearResults()
+            try
+                Util.ClearResults()
+            with ex -> eprintfn "Failed to clear results %s" ex.Message
             x.Dump(maxDepth=1)
         |> ignore
 
