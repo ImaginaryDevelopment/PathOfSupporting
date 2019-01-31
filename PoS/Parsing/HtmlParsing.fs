@@ -234,7 +234,7 @@ module PoeDb =
                         |> Seq.distinctBy fst
                         |> Seq.filter(fst>>fun x -> containsI "suffix" x || containsI "prefix" x)
                     
-                type TieredAffix={Tier:string;Meta:string;ILvl:int;DisplayHtml:string;Chance:string}
+                type TieredAffix={Tier:string;MetaHtml:string;ILvl:int;DisplayHtml:string;Chance:string}
                 type MungedAffix={Display:string;FossilMods:string list;Tiers:TieredAffix list}
 
                 let (|OuterHtml|_|) = getOuterHtml >> Option.ofValueString
@@ -247,11 +247,11 @@ module PoeDb =
                         |> List.choose (fun l ->
                             match l with
                             // shaper/vaal/elder
-                            | InnerHtml(ParseInt ilvl)::fullDisplay::[] -> Some {Tier=null;Meta=null;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=null}
+                            | InnerHtml(ParseInt ilvl)::fullDisplay::[] -> Some {Tier=null;MetaHtml=null;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=null}
                             // delve/essence/masters
-                            | meta::InnerHtml(ParseInt ilvl)::fullDisplay::[] -> Some {Tier=null;Meta=getInnerHtml meta;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=null}
+                            | meta::InnerHtml(ParseInt ilvl)::fullDisplay::[] -> Some {Tier=null;MetaHtml=getInnerHtml meta;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=null}
                             // generic rolled
-                            | tier::name::InnerHtml(ParseInt ilvl)::fullDisplay::chance::[] ->Some {Tier=getInnerHtml tier;Meta=getInnerHtml name;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=getInnerHtml chance}
+                            | tier::name::InnerHtml(ParseInt ilvl)::fullDisplay::chance::[] ->Some {Tier=getInnerHtml tier;MetaHtml=getInnerHtml name;ILvl=ilvl;DisplayHtml=getInnerHtml fullDisplay;Chance=getInnerHtml chance}
                             | InnerHtml bad::_ ->
                                 if PathOfSupporting.Configuration.debug then
                                     eprintfn "you have a bad child %s, %A" bad l
