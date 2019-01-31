@@ -195,15 +195,22 @@ module Nav =
             navItem "Other" [
                 "Map", "ot-map.html"
                 "Strongbox", "ot-box.html"
-                "Raw Item Mods", "RePoE/item.html"
                 "Raw Abyss Mods", "RePoE/abyss_jewel.html"
+                "Raw Area Mods", "RePoE/area.html"
+                "Raw Item Mods - All", "RePoE/item.html"
+                "Raw Item Mods - Unique", "RePoE/item-unique.html"
+                "Raw Item Mods - Corrupted", "RePoE/item-corrupted.html"
+                "Raw Item Mods - Enchantment", "RePoE/item-enchantment.html"
+                "Raw Item Mods - Prefix", "RePoE/item-prefix.html"
+                "Raw Item Mods - Suffix", "RePoE/item-suffix.html"
+                "Raw Misc Mods", "RePoE/misc.html"
             ]
         ]
 type BodyArg = {Main:Element list;Main2:Element list;Main3:Element list;Corruption:Element list;EnchantPage:string option
                 Updated:DateTime
-                Left:Element list;Right:Element list}
+                Left:Element list;Right:Element list;TrailingCenter:Element list}
 module BodyDetail =
-    let generateBody depth {Main=main;Main2=main2;Main3=main3;EnchantPage=enchantOpt;Corruption=corruption;Left=left;Right=right;Updated=updated} scripts =
+    let generateBody depth {Main=main;Main2=main2;Main3=main3;EnchantPage=enchantOpt;Corruption=corruption;Left=left;Right=right;TrailingCenter=tc;Updated=updated} scripts =
         body [] [
             yield div [A.id "wrapper"] [
                 header [A.id "header"] [
@@ -213,7 +220,7 @@ module BodyDetail =
                         ]
                     ]
                     Google.ad {TagId="ad";SlotId="5241339200";Comment="728x90 Banner";Width=728;Height=90;ExtraStyle=null}
-                    nav [A.id "mainav"] [ Nav.makeSiteNav depth ]
+                    nav [A.id "mainav"] []
                 ]
                 div[A.id "paypal"] [
                     a[A.href "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=S6L2QZULXFK7E"][
@@ -241,6 +248,8 @@ module BodyDetail =
 
                 aside[A.id "left";A.className "left list"] left
                 aside[A.id "right";A.className "right list"] right
+                div[A.id "trailing"] tc
+                br []
                 div [A.id"ADBAR"][
                     Google.ad {TagId= "TopSideBarAd";Comment= "300x250 Text Only";Width=300;Height=250;SlotId="9811139608";ExtraStyle=null}
                     Google.ad {TagId= "lowermiddlesidebarad";Comment= "300x250 Display";Width=300;Height=250;SlotId="3764606006";ExtraStyle=null}
@@ -323,6 +332,7 @@ module Index =
                     yield br []
                     yield! blogItems
                 ]
+                TrailingCenter=[]
             }
             scripts
 
@@ -537,13 +547,11 @@ module Impl =
                 ||> List.fold(fun (i,items) ix ->
                         let child = generateAffix i ix
                         i+1,child::items
-                        
                 )
                 |> Tuple2.mapSnd List.rev
-                
+
             j,{   EffixType = x.EffixType
                   Children = children
-                        
             }
         let toHtmlModBucket (x:FixDivisor<AffixContainer<Element>>) =
             let makeSideBucket (x:AffixContainer<Element>) =
@@ -573,6 +581,7 @@ module Impl =
                     EnchantPage=enchOpt
                     Left=left
                     Right=right
+                    TrailingCenter=[]
                     Updated=now
                 }
             |> guardIds "fin"
